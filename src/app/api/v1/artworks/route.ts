@@ -8,6 +8,8 @@ import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 import { findOrCreateUserByWallet } from "@/lib/auth";
 import { requirePayment } from "@/lib/x402";
 import { generateBlurHash } from "@/lib/blurhash";
+import { uploadMetadata } from "@/lib/metadata";
+import { mintCoreNFT } from "@/lib/solana/mint";
 
 export async function POST(request: NextRequest) {
   // 1. Require x402 payment (returns 402 if no valid payment)
@@ -27,11 +29,14 @@ export async function POST(request: NextRequest) {
 
   // 3. Resolve creator identity: JWT first, then walletAddress fallback
   let userId: string;
+  let ownerWallet: string;
   const auth = await requireAuth(request);
   if (!isErrorResponse(auth)) {
     userId = auth.userId;
+    ownerWallet = auth.walletAddress;
   } else if (walletAddress && typeof walletAddress === "string") {
     userId = await findOrCreateUserByWallet(walletAddress);
+    ownerWallet = walletAddress;
   } else {
     return NextResponse.json(
       { error: "Authorization header or walletAddress in body is required" },
@@ -76,6 +81,35 @@ export async function POST(request: NextRequest) {
       .set({ blurHash })
       .where(eq(artworks.id, artwork.id));
     artwork.blurHash = blurHash;
+  }
+
+  // Mint as Metaplex Core NFT (best-effort — artwork is returned regardless)
+  if (process.env.MINT_AUTHORITY_SECRET_KEY) {
+    try {
+      const metadataUri = await uploadMetadata(artwork.id, {
+        name: title,
+        description: `Created with prompt: ${prompt}`,
+        image: imageUrl,
+      });
+
+      const { mintAddress } = await mintCoreNFT(ownerWallet, title, metadataUri);
+
+      await db
+        .update(artworks)
+        .set({ status: "minted", mintAddress, metadataUri })
+        .where(eq(artworks.id, artwork.id));
+
+      artwork.status = "minted";
+      artwork.mintAddress = mintAddress;
+      artwork.metadataUri = metadataUri;
+    } catch (err) {
+      console.error("NFT mint failed:", err);
+      await db
+        .update(artworks)
+        .set({ status: "failed" })
+        .where(eq(artworks.id, artwork.id));
+      artwork.status = "failed";
+    }
   }
 
   return NextResponse.json(artwork, { status: 201 });

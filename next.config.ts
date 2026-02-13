@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     "@noble/hashes",
     "@solana/web3.js",
     "sharp",
+    "@metaplex-foundation/umi",
+    "@metaplex-foundation/umi-bundle-defaults",
+    "@metaplex-foundation/mpl-core",
   ],
   images: {
     remotePatterns: [
