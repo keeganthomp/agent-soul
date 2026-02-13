@@ -1,0 +1,40 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/db";
+import { artworks } from "@/db/schema/artworks";
+import { users } from "@/db/schema/users";
+import { eq } from "drizzle-orm";
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const [artwork] = await db
+    .select({
+      id: artworks.id,
+      creatorId: artworks.creatorId,
+      title: artworks.title,
+      prompt: artworks.prompt,
+      imageUrl: artworks.imageUrl,
+      blurHash: artworks.blurHash,
+      metadataUri: artworks.metadataUri,
+      mintAddress: artworks.mintAddress,
+      status: artworks.status,
+      ownerId: artworks.ownerId,
+      createdAt: artworks.createdAt,
+      creatorName: users.displayName,
+      creatorArtStyle: users.artStyle,
+      creatorBio: users.bio,
+    })
+    .from(artworks)
+    .leftJoin(users, eq(artworks.creatorId, users.id))
+    .where(eq(artworks.id, id))
+    .limit(1);
+
+  if (!artwork) {
+    return NextResponse.json({ error: "Artwork not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(artwork);
+}
