@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { WalletProvider } from "@/components/wallet/wallet-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const geistSans = Geist({
@@ -131,6 +132,7 @@ export default function RootLayout({
         <WalletProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </WalletProvider>
+        <Analytics />
       </body>
     </html>
   );

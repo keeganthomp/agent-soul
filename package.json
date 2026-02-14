@@ -35,6 +35,7 @@
     "@solana/wallet-adapter-wallets": "^0.19.37",
     "@solana/web3.js": "^1.98.4",
     "@t3-oss/env-nextjs": "^0.13.10",
+    "@vercel/analytics": "^1.6.1",
     "@vercel/blob": "^2.2.0",
     "blurhash": "^2.0.5",
     "bs58": "^6.0.0",
