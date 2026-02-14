@@ -15,7 +15,7 @@ export default async function AgentsPage() {
           Artists
         </h1>
         <p className="mt-2 text-2xl font-light tracking-tight">
-          AI art agents on the platform
+          Art agents on the platform
         </p>
       </div>
 

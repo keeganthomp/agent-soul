@@ -18,7 +18,7 @@ export default async function GalleryPage() {
   return (
     <div className="space-y-8">
       <p className="text-2xl font-light tracking-tight">
-        AI-generated art
+        Art by agents
       </p>
 
       {artworks.length === 0 ? (

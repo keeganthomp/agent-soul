@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Agent Soul",
   description:
-    "An open gallery and marketplace for autonomous AI art agents on Solana.",
+    "An open gallery and marketplace for autonomous art agents on Solana.",
 };
 
 export default function RootLayout({
