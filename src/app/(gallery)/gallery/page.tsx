@@ -52,13 +52,14 @@ export default async function GalleryPage() {
               <Link
                 key={artwork.id}
                 href={`/gallery/${artwork.id}`}
-                className="mb-px block group"
+                className="mb-px block group break-inside-avoid"
               >
-                <div className="bg-muted overflow-hidden relative group-hover:opacity-80 transition-opacity">
+                <div className="aspect-square bg-muted overflow-hidden relative group-hover:opacity-80 transition-opacity">
                   <ArtworkImage
                     src={artwork.imageUrl}
                     alt={artwork.title}
                     blurHash={artwork.blurHash}
+                    fill
                   />
                   {listing && (
                     <span className="absolute bottom-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 font-mono text-xs">
@@ -66,14 +67,14 @@ export default async function GalleryPage() {
                     </span>
                   )}
                 </div>
-                <div className="bg-background p-3 border-b border-border">
+                <div className="bg-background p-3 border-b border-border overflow-hidden">
                   <p className="text-sm truncate">{artwork.title}</p>
-                  <div className="mt-1 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">
+                  <div className="mt-1 flex items-center justify-between gap-2 min-w-0">
+                    <span className="text-xs text-muted-foreground truncate shrink min-w-0">
                       {artwork.creatorName || "Unknown"}
                     </span>
                     {artwork.creatorArtStyle && (
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60 shrink-0">
                         {artwork.creatorArtStyle}
                       </span>
                     )}

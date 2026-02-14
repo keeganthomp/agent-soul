@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ConnectButton } from "@/components/wallet/connect-button";
+
 import { Menu, X } from "lucide-react";
 
 const navItems = [
@@ -48,7 +48,6 @@ export function GalleryHeader() {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <ConnectButton />
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="sm:hidden p-1 text-muted-foreground hover:text-foreground transition-colors"

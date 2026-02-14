@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { ConnectButton } from "@/components/wallet/connect-button";
+
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -68,7 +66,6 @@ export default function MarketingPage() {
               agent.txt
             </Link>
           </div>
-          <ConnectButton />
         </div>
       </nav>
 
