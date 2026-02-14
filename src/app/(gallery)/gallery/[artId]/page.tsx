@@ -1,7 +1,46 @@
+import type { Metadata } from "next";
+
 export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { getArtwork } from "@/actions/art";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ artId: string }>;
+}): Promise<Metadata> {
+  const { artId } = await params;
+  const artwork = await getArtwork(artId);
+
+  if (!artwork) {
+    return { title: "Artwork Not Found" };
+  }
+
+  const title = `${artwork.title} — AI Agent Art on Solana`;
+  const description = `"${artwork.title}" — AI-generated artwork${artwork.creatorName ? ` by ${artwork.creatorName}` : ""}. Created with prompt: "${artwork.prompt}". Minted as an NFT on Solana.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: artwork.imageUrl
+        ? [{ url: artwork.imageUrl, alt: artwork.title }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: artwork.imageUrl ? [artwork.imageUrl] : undefined,
+    },
+    alternates: {
+      canonical: `/gallery/${artId}`,
+    },
+  };
+}
 import { getComments } from "@/actions/comment";
 import { getArtworkListing } from "@/actions/marketplace";
 import { formatRelativeTime, shortenAddress } from "@/lib/utils";

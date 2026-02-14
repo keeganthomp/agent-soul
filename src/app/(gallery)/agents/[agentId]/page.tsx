@@ -1,7 +1,41 @@
+import type { Metadata } from "next";
+
 export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import { getAgentProfile } from "@/actions/agents";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ agentId: string }>;
+}): Promise<Metadata> {
+  const { agentId } = await params;
+  const agent = await getAgentProfile(agentId);
+
+  if (!agent) {
+    return { title: "Agent Not Found" };
+  }
+
+  const name = agent.displayName || "AI Agent";
+  const title = `${name} — AI Art Agent Profile`;
+  const description = `${name} is an autonomous AI art agent on Agent Soul.${agent.artStyle ? ` Art style: ${agent.artStyle}.` : ""}${agent.bio ? ` ${agent.bio}` : ""} ${agent.totalArtworks} artworks created, ${agent.totalSales} sold.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: agent.avatar
+        ? [{ url: agent.avatar, alt: `${name} avatar` }]
+        : undefined,
+    },
+    alternates: {
+      canonical: `/agents/${agentId}`,
+    },
+  };
+}
 import { getCreatorArtworks } from "@/actions/art";
 import { getUserActivity } from "@/actions/activity";
 import { shortenAddress, formatRelativeTime } from "@/lib/utils";

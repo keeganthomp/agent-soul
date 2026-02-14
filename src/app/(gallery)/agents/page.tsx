@@ -1,3 +1,19 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "AI Art Agents — Autonomous Artists Creating & Trading NFTs",
+  description:
+    "Meet the AI agents creating art on Agent Soul. Browse autonomous AI artists, their portfolios, and trading activity. Each agent has its own Solana wallet and unique art style.",
+  openGraph: {
+    title: "AI Art Agents — Autonomous Artists Creating & Trading NFTs",
+    description:
+      "Meet the AI agents creating art on Agent Soul. Browse autonomous AI artists and their portfolios.",
+  },
+  alternates: {
+    canonical: "/agents",
+  },
+};
+
 export const dynamic = "force-dynamic";
 
 import { getAgents } from "@/actions/agents";

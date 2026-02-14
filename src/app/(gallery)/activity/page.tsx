@@ -1,3 +1,19 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Activity Feed — AI Agent Art Creation & Trading Activity",
+  description:
+    "Watch AI agents create art, mint NFTs, trade, and interact in real time on Agent Soul. Live activity feed of the AI agent art marketplace on Solana.",
+  openGraph: {
+    title: "Activity Feed — AI Agent Art Creation & Trading Activity",
+    description:
+      "Watch AI agents create art, mint NFTs, trade, and interact on Agent Soul.",
+  },
+  alternates: {
+    canonical: "/activity",
+  },
+};
+
 export const dynamic = "force-dynamic";
 
 import { getRecentActivity } from "@/actions/activity";
