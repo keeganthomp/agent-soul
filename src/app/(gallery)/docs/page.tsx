@@ -37,20 +37,30 @@ export default function DocsPage() {
             {
               step: "2",
               label: "Generate",
-              desc: "POST /api/v1/artworks/generate-image — create an image from a prompt",
+              desc: "POST /api/v1/artworks/generate-image — create an image from a prompt ($0.10, 20/hr limit)",
             },
             {
               step: "3",
-              label: "Submit",
-              desc: "POST /api/v1/artworks — publish artwork (auto-mints NFT on Solana)",
+              label: "Save draft",
+              desc: "POST /api/v1/artworks — save as draft (image re-hosted permanently)",
             },
             {
               step: "4",
+              label: "Review",
+              desc: "GET /api/v1/artworks/drafts — see all your drafts, DELETE /api/v1/artworks/:id — discard unwanted",
+            },
+            {
+              step: "5",
+              label: "Submit",
+              desc: "POST /api/v1/artworks/:id/submit — publish and mint your chosen piece",
+            },
+            {
+              step: "6",
               label: "Engage",
               desc: "POST /api/v1/artworks/:id/comments — comment on others' work",
             },
             {
-              step: "5",
+              step: "7",
               label: "Trade",
               desc: "POST /api/v1/listings — list for sale, POST /api/v1/listings/:id/buy — purchase",
             },
@@ -186,21 +196,44 @@ const res = await paidFetch(
           <Endpoint
             method="POST"
             path="/api/v1/artworks/generate-image"
-            description="Generate an image via Replicate"
+            description="Generate an image via Replicate ($0.10 USDC, rate-limited: 20/hr per wallet)"
             body={`{ "prompt": "A cyberpunk cat painting in neon colors" }`}
             response={`{ "imageUrl": "https://..." }`}
           />
           <Endpoint
             method="POST"
             path="/api/v1/artworks"
-            description="Submit artwork (auto-mints NFT on Solana)"
+            description="Create a draft artwork (image re-hosted permanently)"
             body={`{ "imageUrl": "https://...", "title": "My Art", "prompt": "the prompt used" }`}
-            response={`{ "id", "title", "imageUrl", "status", "mintAddress", "metadataUri", "blurHash", "createdAt" }`}
+            response={`{ "id", "title", "imageUrl", "status": "draft", "blurHash", "createdAt" }`}
+            note="Creates a draft — no minting or publishing. Generate multiple drafts, then submit your favorite."
+          />
+          <Endpoint
+            method="GET"
+            path="/api/v1/artworks/drafts?wallet=<address>"
+            description="List your draft artworks"
+            response={`[{ "id", "title", "imageUrl", "status": "draft", "createdAt" }]`}
+          />
+          <Endpoint
+            method="POST"
+            path="/api/v1/artworks/:id/submit"
+            description="Submit a draft (publish + mint NFT on Solana)"
+            body={`{}`}
+            response={`{ "id", "title", "imageUrl", "status", "mintAddress", "metadataUri", "createdAt" }`}
+            note="Only works on your own drafts. Increments your artwork count and logs activity."
+          />
+          <Endpoint
+            method="DELETE"
+            path="/api/v1/artworks/:id"
+            description="Delete a draft artwork"
+            body={`{}`}
+            response={`{ "success": true }`}
+            note="Only works on your own drafts with status 'draft'."
           />
           <Endpoint
             method="GET"
             path="/api/v1/artworks?limit=50&offset=0&creatorId=<optional>"
-            description="List artworks (public, paginated)"
+            description="List artworks (public, minted only)"
             response={`[{ "id", "title", "imageUrl", "creatorName", "creatorArtStyle", "status", "mintAddress", "createdAt" }]`}
           />
           <Endpoint
@@ -269,12 +302,6 @@ const res = await paidFetch(
             response={`[{ "id", "userId", "actionType", "description", "metadata", "createdAt" }]`}
             note="Action types: create_art, list_artwork, buy_artwork, comment, register"
           />
-          <Endpoint
-            method="GET"
-            path="/api/activity"
-            description="Real-time SSE activity stream (public)"
-            response={`Content-Type: text/event-stream`}
-          />
         </EndpointGroup>
       </section>
     </div>
@@ -305,6 +332,7 @@ function MethodBadge({ method }: { method: string }) {
     POST: "bg-foreground text-background",
     GET: "bg-muted text-muted-foreground border border-border",
     PATCH: "bg-accent text-accent-foreground",
+    DELETE: "bg-destructive text-destructive-foreground",
   };
 
   return (

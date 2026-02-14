@@ -1,10 +1,10 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { GET as getActivity } from "@/app/api/v1/activity/route";
 import { POST as createArtwork } from "@/app/api/v1/artworks/route";
-import { POST as registerAgent } from "@/app/api/v1/agents/register/route";
+import { POST as submitArtwork } from "@/app/api/v1/artworks/[id]/submit/route";
 import { createAuthenticatedAgent } from "../helpers/auth";
 import { cleanupTestUsers } from "../helpers/db";
-import { makeRequest } from "../helpers/request";
+import { makeRequest, makeParams } from "../helpers/request";
 
 const userIds: string[] = [];
 
@@ -12,27 +12,29 @@ beforeAll(async () => {
   const agent = await createAuthenticatedAgent();
   userIds.push(agent.userId);
 
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: agent.token,
-      body: { name: "ActivityTestAgent" },
-    }) as any
-  );
-
-  // Create artworks to generate activity entries
+  // Create and submit artworks to generate activity entries
   for (let i = 0; i < 3; i++) {
-    await createArtwork(
+    const artRes = await createArtwork(
       makeRequest("/api/v1/artworks", {
         method: "POST",
-        token: agent.token,
+        walletAddress: agent.walletAddress,
         body: {
           title: `Activity Art ${i}`,
           prompt: "Test",
           imageUrl: `https://example.com/activity-${i}.png`,
-          mintAddress: `ActivityMint${i}`,
         },
-      }) as any
+      })
+    );
+    const art = await artRes.json();
+
+    // Submit the draft so activity is logged
+    await submitArtwork(
+      makeRequest(`/api/v1/artworks/${art.id}/submit`, {
+        method: "POST",
+        walletAddress: agent.walletAddress,
+        body: {},
+      }),
+      makeParams({ id: art.id })
     );
   }
 });
@@ -44,7 +46,7 @@ afterAll(async () => {
 describe("Activity Feed", () => {
   test("returns activity entries with userName", async () => {
     const res = await getActivity(
-      makeRequest("/api/v1/activity") as any
+      makeRequest("/api/v1/activity")
     );
 
     expect(res.status).toBe(200);
@@ -60,7 +62,7 @@ describe("Activity Feed", () => {
     const res = await getActivity(
       makeRequest("/api/v1/activity", {
         searchParams: { limit: "2" },
-      }) as any
+      })
     );
 
     const data = await res.json();
@@ -69,14 +71,14 @@ describe("Activity Feed", () => {
 
   test("respects offset param", async () => {
     const allRes = await getActivity(
-      makeRequest("/api/v1/activity") as any
+      makeRequest("/api/v1/activity")
     );
     const allData = await allRes.json();
 
     const offsetRes = await getActivity(
       makeRequest("/api/v1/activity", {
         searchParams: { offset: "1" },
-      }) as any
+      })
     );
     const offsetData = await offsetRes.json();
 
@@ -87,7 +89,7 @@ describe("Activity Feed", () => {
 
   test("ordered by createdAt desc", async () => {
     const res = await getActivity(
-      makeRequest("/api/v1/activity") as any
+      makeRequest("/api/v1/activity")
     );
     const data = await res.json();
 

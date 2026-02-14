@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
-import { activityLog } from "@/db/schema/activity-log";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { requirePaidIdentity } from "@/lib/api-auth";
 import { generateBlurHash } from "@/lib/blurhash";
-import { uploadImage, uploadMetadata } from "@/lib/metadata";
-import { mintCoreNFT } from "@/lib/solana/mint";
+import { uploadImage } from "@/lib/metadata";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -23,9 +21,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { userId, walletAddress: ownerWallet } = identity;
+  const { userId } = identity;
 
-  // Create artwork
+  // Create draft artwork
   const [artwork] = await db
     .insert(artworks)
     .values({
@@ -34,74 +32,28 @@ export async function POST(request: NextRequest) {
       title,
       prompt,
       imageUrl,
+      status: "draft",
     })
     .returning();
 
-  // Increment total artworks
-  await db
-    .update(users)
-    .set({
-      totalArtworks: sql`${users.totalArtworks} + 1`,
-      lastActiveAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(users.id, userId));
+  // Re-host image to permanent URL so the Replicate temp URL is preserved
+  const permanentImageUrl = await uploadImage(artwork.id, imageUrl);
+  if (permanentImageUrl !== imageUrl) {
+    await db
+      .update(artworks)
+      .set({ imageUrl: permanentImageUrl })
+      .where(eq(artworks.id, artwork.id));
+    artwork.imageUrl = permanentImageUrl;
+  }
 
-  await db.insert(activityLog).values({
-    userId,
-    actionType: "create_art",
-    description: `Created artwork "${title}"`,
-    metadata: { artworkId: artwork.id },
-  });
-
-  // Generate blurhash for the image (best-effort, ~<1s)
-  const blurHash = await generateBlurHash(imageUrl);
+  // Generate blurhash (best-effort)
+  const blurHash = await generateBlurHash(artwork.imageUrl);
   if (blurHash) {
     await db
       .update(artworks)
       .set({ blurHash })
       .where(eq(artworks.id, artwork.id));
     artwork.blurHash = blurHash;
-  }
-
-  // Mint as Metaplex Core NFT (best-effort — artwork is returned regardless)
-  if (process.env.MINT_AUTHORITY_SECRET_KEY) {
-    try {
-      // Re-host image to permanent URL
-      const permanentImageUrl = await uploadImage(artwork.id, imageUrl);
-      if (permanentImageUrl !== imageUrl) {
-        await db
-          .update(artworks)
-          .set({ imageUrl: permanentImageUrl })
-          .where(eq(artworks.id, artwork.id));
-        artwork.imageUrl = permanentImageUrl;
-      }
-
-      const metadataUri = await uploadMetadata(artwork.id, {
-        name: title,
-        description: `Created with prompt: ${prompt}`,
-        image: permanentImageUrl,
-        creatorWallet: ownerWallet,
-      });
-
-      const { mintAddress } = await mintCoreNFT(ownerWallet, title, metadataUri);
-
-      await db
-        .update(artworks)
-        .set({ status: "minted", mintAddress, metadataUri })
-        .where(eq(artworks.id, artwork.id));
-
-      artwork.status = "minted";
-      artwork.mintAddress = mintAddress;
-      artwork.metadataUri = metadataUri;
-    } catch (err) {
-      console.error("NFT mint failed:", err);
-      await db
-        .update(artworks)
-        .set({ status: "failed" })
-        .where(eq(artworks.id, artwork.id));
-      artwork.status = "failed";
-    }
   }
 
   return NextResponse.json(artwork, { status: 201 });

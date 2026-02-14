@@ -23,7 +23,7 @@ import { wrap as wrapFetch } from "@faremeter/fetch";
 
 config({ path: ".env.local" });
 
-const API_URL = (process.env.API_URL || "https://agent-soul.vercel.app/").replace(
+const API_URL = (process.env.API_URL || "http://localhost:3000").replace(
   /\/$/,
   "",
 );
@@ -103,9 +103,13 @@ const { status: regStatus, data: regData } = await paidApi<{
     artStyle: "cyberpunk",
   }),
 });
-assert(regStatus === 200, `register should return 200, got ${regStatus}`);
-assert(!!regData.agent?.id, "should receive agent id");
-console.log(`  Registered — agentId: ${regData.agent.id}, name: ${regData.agent.displayName}`);
+assert(regStatus === 201 || regStatus === 409, `register should return 201 or 409, got ${regStatus}`);
+if (regStatus === 201) {
+  assert(!!regData.agent?.id, "should receive agent id");
+  console.log(`  Registered — agentId: ${regData.agent.id}, name: ${regData.agent.displayName}`);
+} else {
+  console.log("  Already registered (409), continuing...");
+}
 
 // ---------------------------------------------------------------------------
 // 2. Generate image via Replicate (with x402 payment / dev fallback)
@@ -127,10 +131,10 @@ assert(!!genData.imageUrl, "should receive an imageUrl");
 console.log(`  Image URL: ${genData.imageUrl}`);
 
 // ---------------------------------------------------------------------------
-// 3. Submit artwork (with x402 payment / dev fallback)
+// 3. Create draft artwork (with x402 payment / dev fallback)
 // ---------------------------------------------------------------------------
 
-console.log("\n=== Step 3: Submit Artwork ===");
+console.log("\n=== Step 3: Create Draft ===");
 
 const title = `E2E Test Art — ${new Date().toISOString()}`;
 
@@ -139,7 +143,6 @@ const { status: artStatus, data: artData } = await paidApi<{
   title?: string;
   imageUrl?: string;
   status?: string;
-  mintAddress?: string;
   error?: string;
 }>("/api/v1/artworks", {
   method: "POST",
@@ -157,14 +160,46 @@ assert(
   `artworks POST should return 201, got ${artStatus}: ${JSON.stringify(artData)}`,
 );
 assert(!!artData.id, "should receive artwork id");
-console.log("  Artwork created:");
+assert(artData.status === "draft", `status should be "draft", got "${artData.status}"`);
+console.log("  Draft created:");
 console.log(JSON.stringify(artData, null, 2));
 
 // ---------------------------------------------------------------------------
-// 4. Check profile via /agents/me
+// 4. Submit draft (publish + mint)
 // ---------------------------------------------------------------------------
 
-console.log("\n=== Step 4: Check Profile ===");
+console.log("\n=== Step 4: Submit Draft ===");
+
+const { status: submitStatus, data: submitData } = await paidApi<{
+  id?: string;
+  title?: string;
+  imageUrl?: string;
+  status?: string;
+  mintAddress?: string;
+  metadataUri?: string;
+  error?: string;
+}>(`/api/v1/artworks/${artData.id}/submit`, {
+  method: "POST",
+  headers: jsonHeaders,
+  body: JSON.stringify({ walletAddress }),
+});
+
+assert(
+  submitStatus === 200,
+  `submit should return 200, got ${submitStatus}: ${JSON.stringify(submitData)}`,
+);
+assert(
+  submitData.status !== "draft",
+  `status should no longer be "draft", got "${submitData.status}"`,
+);
+console.log("  Artwork submitted:");
+console.log(JSON.stringify(submitData, null, 2));
+
+// ---------------------------------------------------------------------------
+// 5. Check profile via /agents/me
+// ---------------------------------------------------------------------------
+
+console.log("\n=== Step 5: Check Profile ===");
 
 const meRes = await fetch(`${API_URL}/api/v1/agents/me?wallet=${walletAddress}`);
 const meData = (await meRes.json()) as { id?: string; displayName?: string; totalArtworks?: number };

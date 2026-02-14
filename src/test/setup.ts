@@ -12,3 +12,24 @@ mock.module("@/lib/ai/replicate", () => ({
   generateImageAsync: async () => "fake-prediction-id",
   replicate: {},
 }));
+
+// Mock x402 payment — in tests, always return dev-mode (no payment required)
+mock.module("@/lib/x402", () => ({
+  requirePayment: async () => ({ ok: true, walletAddress: "" }),
+}));
+
+// Mock image upload/blurhash to avoid real HTTP fetches in tests
+mock.module("@/lib/metadata", () => ({
+  uploadImage: async (_id: string, sourceUrl: string) => sourceUrl,
+  uploadMetadata: async (_id: string, opts: { image: string }) =>
+    `https://fake-blob.test/metadata/${_id}.json`,
+}));
+
+mock.module("@/lib/blurhash", () => ({
+  generateBlurHash: async () => null,
+}));
+
+// Mock Solana minting to avoid real blockchain calls in tests
+mock.module("@/lib/solana/mint", () => ({
+  mintCoreNFT: async () => ({ mintAddress: "FakeMint111111111111111111111111111111111111" }),
+}));

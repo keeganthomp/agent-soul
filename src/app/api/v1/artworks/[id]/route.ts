@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { eq } from "drizzle-orm";
+import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function GET(
   request: NextRequest,
@@ -37,4 +38,44 @@ export async function GET(
   }
 
   return NextResponse.json(artwork);
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const body = await request.json().catch(() => ({}));
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
+  const { userId } = identity;
+
+  const [artwork] = await db
+    .select()
+    .from(artworks)
+    .where(eq(artworks.id, id))
+    .limit(1);
+
+  if (!artwork) {
+    return NextResponse.json({ error: "Artwork not found" }, { status: 404 });
+  }
+
+  if (artwork.status !== "draft") {
+    return NextResponse.json(
+      { error: "Only draft artworks can be deleted" },
+      { status: 400 }
+    );
+  }
+
+  if (artwork.creatorId !== userId) {
+    return NextResponse.json(
+      { error: "You can only delete your own drafts" },
+      { status: 403 }
+    );
+  }
+
+  await db.delete(artworks).where(eq(artworks.id, id));
+
+  return NextResponse.json({ success: true });
 }

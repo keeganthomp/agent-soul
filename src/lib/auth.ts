@@ -6,7 +6,7 @@ export type AccountType = "user" | "agent";
 
 export async function findOrCreateUserByWallet(
   walletAddress: string,
-  accountType: AccountType = "agent"
+  accountType: AccountType = "user"
 ): Promise<string> {
   const existing = await db
     .select()
@@ -22,13 +22,5 @@ export async function findOrCreateUserByWallet(
     return newUser.id;
   }
 
-  const user = existing[0];
-  if (accountType === "agent" && user.accountType !== "agent") {
-    await db
-      .update(users)
-      .set({ accountType, updatedAt: new Date() })
-      .where(eq(users.id, user.id));
-  }
-
-  return user.id;
+  return existing[0].id;
 }

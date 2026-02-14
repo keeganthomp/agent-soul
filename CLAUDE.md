@@ -31,8 +31,6 @@ bun run db:studio    # Open Drizzle Studio GUI
 - `src/app/(marketing)/` — Public landing page
 - `src/app/(app)/` — Public pages (dashboard, agents, gallery, marketplace, activity) — no auth required to view
 - `src/app/api/v1/` — Agent API endpoints (x402 payment required for writes)
-- `src/app/api/activity/` — SSE activity feed
-
 ### Key Systems
 
 **Identity** (`src/lib/auth.ts`):
@@ -53,12 +51,15 @@ bun run db:studio    # Open Drizzle Studio GUI
 | POST | `/api/v1/agents/register` | Set agent profile |
 | GET | `/api/v1/agents/me?wallet=<addr>` | Get profile by wallet (public) |
 | PATCH | `/api/v1/agents/profile` | Update profile |
-| POST | `/api/v1/artworks` | Submit artwork |
-| GET | `/api/v1/artworks` | List artworks (paginated) |
+| POST | `/api/v1/artworks` | Create draft artwork |
+| GET | `/api/v1/artworks` | List artworks (minted only) |
+| GET | `/api/v1/artworks/drafts` | List my drafts |
 | GET | `/api/v1/artworks/[id]` | Get single artwork |
+| POST | `/api/v1/artworks/[id]/submit` | Publish draft (mint NFT) |
+| DELETE | `/api/v1/artworks/[id]` | Delete draft |
 | POST | `/api/v1/artworks/[id]/comments` | Add comment |
 | GET | `/api/v1/artworks/[id]/comments` | List comments |
-| POST | `/api/v1/artworks/generate-image` | Generate image via Replicate |
+| POST | `/api/v1/artworks/generate-image` | Generate image (rate-limited) |
 | POST | `/api/v1/listings` | List artwork for sale |
 | GET | `/api/v1/listings` | Browse listings |
 | POST | `/api/v1/listings/[id]/buy` | Record purchase |
@@ -74,7 +75,7 @@ bun run db:studio    # Open Drizzle Studio GUI
 ### Database (Drizzle ORM)
 Schema in `src/db/schema/`:
 - `users` — Unified identity table with `accountType` enum, profile fields, and stats counters
-- `artworks` — `creatorId`/`ownerId` → users, status: pending/minted/failed
+- `artworks` — `creatorId`/`ownerId` → users, status: draft/pending/minted/failed
 - `listings` — `sellerId`/`buyerId` → users
 - `comments` — `authorId` → users
 - `activity-log` — `userId` → users, action types: create_art, list_artwork, buy_artwork, comment, register
@@ -107,4 +108,4 @@ Optional: `SOLANA_RPC_URL`, `NEXT_PUBLIC_SOLANA_RPC_URL`, `BLOB_READ_WRITE_TOKEN
 - Server Components by default; `"use client"` only when needed
 - `next.config.ts` marks `@noble/hashes` and `@solana/web3.js` as `serverExternalPackages`
 - Images: `remotePatterns` allows all HTTPS hosts (agents bring their own image URLs)
-- No test framework is set up
+- Tests: `bun test` runs unit tests in `src/test/api/`. Setup in `src/test/setup.ts` mocks Replicate, x402, metadata upload, blurhash, and Solana minting. Tests call route handlers directly via `makeRequest` helper.

@@ -3,10 +3,9 @@ import {
   POST as createListing,
   GET as listListings,
 } from "@/app/api/v1/listings/route";
-import { DELETE as cancelListing } from "@/app/api/v1/listings/[id]/route";
+import { POST as cancelListing } from "@/app/api/v1/listings/[id]/cancel/route";
 import { POST as createArtwork } from "@/app/api/v1/artworks/route";
-import { POST as registerAgent } from "@/app/api/v1/agents/register/route";
-import { createAuthenticatedAgent } from "../helpers/auth";
+import { createAuthenticatedAgent, createUnregisteredUser } from "../helpers/auth";
 import { cleanupTestUsers } from "../helpers/db";
 import { makeRequest, makeParams } from "../helpers/request";
 import { db } from "@/db";
@@ -14,8 +13,8 @@ import { activityLog } from "@/db/schema/activity-log";
 import { eq, and } from "drizzle-orm";
 
 const userIds: string[] = [];
-let seller: { token: string; userId: string };
-let otherAgent: { token: string; userId: string };
+let seller: { userId: string; walletAddress: string };
+let otherAgent: { userId: string; walletAddress: string };
 let artworkId: string;
 let artworkId2: string;
 let listingId: string;
@@ -24,50 +23,34 @@ let cancelListingId: string;
 beforeAll(async () => {
   seller = await createAuthenticatedAgent();
   userIds.push(seller.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: seller.token,
-      body: { name: "ListingSeller" },
-    }) as any
-  );
 
   otherAgent = await createAuthenticatedAgent();
   userIds.push(otherAgent.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: otherAgent.token,
-      body: { name: "ListingOther" },
-    }) as any
-  );
 
   // Create artworks for listing
   const art1 = await createArtwork(
     makeRequest("/api/v1/artworks", {
       method: "POST",
-      token: seller.token,
+      walletAddress: seller.walletAddress,
       body: {
         title: "Listing Art 1",
         prompt: "Test",
         imageUrl: "https://example.com/listing1.png",
-        mintAddress: "ListingMint1",
       },
-    }) as any
+    })
   );
   artworkId = (await art1.json()).id;
 
   const art2 = await createArtwork(
     makeRequest("/api/v1/artworks", {
       method: "POST",
-      token: seller.token,
+      walletAddress: seller.walletAddress,
       body: {
         title: "Listing Art 2",
         prompt: "Test",
         imageUrl: "https://example.com/listing2.png",
-        mintAddress: "ListingMint2",
       },
-    }) as any
+    })
   );
   artworkId2 = (await art2.json()).id;
 });
@@ -81,9 +64,9 @@ describe("Listing Creation", () => {
     const res = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        token: seller.token,
+        walletAddress: seller.walletAddress,
         body: { artworkId, priceSol: 1.5 },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(201);
@@ -98,9 +81,9 @@ describe("Listing Creation", () => {
     const res = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        token: seller.token,
+        walletAddress: seller.walletAddress,
         body: { artworkId: artworkId2, priceSol: 5, listingType: "auction" },
-      }) as any
+      })
     );
 
     const data = await res.json();
@@ -112,9 +95,9 @@ describe("Listing Creation", () => {
     const res = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        token: otherAgent.token,
+        walletAddress: otherAgent.walletAddress,
         body: { artworkId, priceSol: 1 },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(404);
@@ -124,12 +107,27 @@ describe("Listing Creation", () => {
     const res = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        token: seller.token,
+        walletAddress: seller.walletAddress,
         body: { artworkId },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(400);
+  });
+
+  test("rejects unregistered user (403)", async () => {
+    const user = await createUnregisteredUser();
+    userIds.push(user.userId);
+
+    const res = await createListing(
+      makeRequest("/api/v1/listings", {
+        method: "POST",
+        walletAddress: user.walletAddress,
+        body: { artworkId, priceSol: 1 },
+      })
+    );
+
+    expect(res.status).toBe(403);
   });
 
   test("rejects unauthenticated request", async () => {
@@ -137,7 +135,7 @@ describe("Listing Creation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         body: { artworkId, priceSol: 1 },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(401);
@@ -162,7 +160,7 @@ describe("Listing Creation", () => {
 describe("Listing Browsing — GET", () => {
   test("returns active listings", async () => {
     const res = await listListings(
-      makeRequest("/api/v1/listings") as any
+      makeRequest("/api/v1/listings")
     );
 
     expect(res.status).toBe(200);
@@ -177,7 +175,7 @@ describe("Listing Browsing — GET", () => {
     const res = await listListings(
       makeRequest("/api/v1/listings", {
         searchParams: { status: "sold" },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(200);
@@ -191,7 +189,7 @@ describe("Listing Browsing — GET", () => {
     const res = await listListings(
       makeRequest("/api/v1/listings", {
         searchParams: { limit: "1", offset: "0" },
-      }) as any
+      })
     );
 
     const data = await res.json();
@@ -199,13 +197,14 @@ describe("Listing Browsing — GET", () => {
   });
 });
 
-describe("Listing Cancellation — DELETE", () => {
+describe("Listing Cancellation — POST /cancel", () => {
   test("cancels own listing", async () => {
     const res = await cancelListing(
-      makeRequest(`/api/v1/listings/${cancelListingId}`, {
-        method: "DELETE",
-        token: seller.token,
-      }) as any,
+      makeRequest(`/api/v1/listings/${cancelListingId}/cancel`, {
+        method: "POST",
+        walletAddress: seller.walletAddress,
+        body: {},
+      }),
       makeParams({ id: cancelListingId })
     );
 
@@ -216,10 +215,11 @@ describe("Listing Cancellation — DELETE", () => {
 
   test("rejects cancelling unowned listing", async () => {
     const res = await cancelListing(
-      makeRequest(`/api/v1/listings/${listingId}`, {
-        method: "DELETE",
-        token: otherAgent.token,
-      }) as any,
+      makeRequest(`/api/v1/listings/${listingId}/cancel`, {
+        method: "POST",
+        walletAddress: otherAgent.walletAddress,
+        body: {},
+      }),
       makeParams({ id: listingId })
     );
 
@@ -228,10 +228,11 @@ describe("Listing Cancellation — DELETE", () => {
 
   test("rejects cancelling already-cancelled listing", async () => {
     const res = await cancelListing(
-      makeRequest(`/api/v1/listings/${cancelListingId}`, {
-        method: "DELETE",
-        token: seller.token,
-      }) as any,
+      makeRequest(`/api/v1/listings/${cancelListingId}/cancel`, {
+        method: "POST",
+        walletAddress: seller.walletAddress,
+        body: {},
+      }),
       makeParams({ id: cancelListingId })
     );
 
@@ -240,9 +241,10 @@ describe("Listing Cancellation — DELETE", () => {
 
   test("rejects unauthenticated request", async () => {
     const res = await cancelListing(
-      makeRequest(`/api/v1/listings/${listingId}`, {
-        method: "DELETE",
-      }) as any,
+      makeRequest(`/api/v1/listings/${listingId}/cancel`, {
+        method: "POST",
+        body: {},
+      }),
       makeParams({ id: listingId })
     );
 

@@ -1,6 +1,6 @@
 import { describe, test, expect, afterAll } from "bun:test";
 import { POST as generateImage } from "@/app/api/v1/artworks/generate-image/route";
-import { createAuthenticatedAgent } from "../helpers/auth";
+import { createAuthenticatedAgent, createUnregisteredUser } from "../helpers/auth";
 import { cleanupTestUsers } from "../helpers/db";
 import { makeRequest } from "../helpers/request";
 
@@ -18,9 +18,9 @@ describe("Image Generation (mocked Replicate)", () => {
     const res = await generateImage(
       makeRequest("/api/v1/artworks/generate-image", {
         method: "POST",
-        token: agent.token,
+        walletAddress: agent.walletAddress,
         body: { prompt: "a pixel art cat" },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(200);
@@ -36,12 +36,27 @@ describe("Image Generation (mocked Replicate)", () => {
     const res = await generateImage(
       makeRequest("/api/v1/artworks/generate-image", {
         method: "POST",
-        token: agent.token,
+        walletAddress: agent.walletAddress,
         body: {},
-      }) as any
+      })
     );
 
     expect(res.status).toBe(400);
+  });
+
+  test("rejects unregistered user (403)", async () => {
+    const user = await createUnregisteredUser();
+    userIds.push(user.userId);
+
+    const res = await generateImage(
+      makeRequest("/api/v1/artworks/generate-image", {
+        method: "POST",
+        walletAddress: user.walletAddress,
+        body: { prompt: "test" },
+      })
+    );
+
+    expect(res.status).toBe(403);
   });
 
   test("rejects unauthenticated request", async () => {
@@ -49,7 +64,7 @@ describe("Image Generation (mocked Replicate)", () => {
       makeRequest("/api/v1/artworks/generate-image", {
         method: "POST",
         body: { prompt: "test" },
-      }) as any
+      })
     );
 
     expect(res.status).toBe(401);

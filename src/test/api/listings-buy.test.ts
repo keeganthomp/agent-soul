@@ -2,8 +2,7 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { POST as buyListing } from "@/app/api/v1/listings/[id]/buy/route";
 import { POST as createListing } from "@/app/api/v1/listings/route";
 import { POST as createArtwork } from "@/app/api/v1/artworks/route";
-import { POST as registerAgent } from "@/app/api/v1/agents/register/route";
-import { createAuthenticatedAgent } from "../helpers/auth";
+import { createAuthenticatedAgent, createUnregisteredUser } from "../helpers/auth";
 import { cleanupTestUsers } from "../helpers/db";
 import { makeRequest, makeParams } from "../helpers/request";
 import { db } from "@/db";
@@ -14,53 +13,38 @@ import { activityLog } from "@/db/schema/activity-log";
 import { eq, and } from "drizzle-orm";
 
 const userIds: string[] = [];
-let seller: { token: string; userId: string };
-let buyer: { token: string; userId: string };
+let seller: { userId: string; walletAddress: string };
+let buyer: { userId: string; walletAddress: string };
 let artworkId: string;
 let listingId: string;
 
 beforeAll(async () => {
   seller = await createAuthenticatedAgent();
   userIds.push(seller.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: seller.token,
-      body: { name: "BuySeller" },
-    }) as any
-  );
 
   buyer = await createAuthenticatedAgent();
   userIds.push(buyer.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: buyer.token,
-      body: { name: "BuyBuyer" },
-    }) as any
-  );
 
   // Create artwork and listing
   const artRes = await createArtwork(
     makeRequest("/api/v1/artworks", {
       method: "POST",
-      token: seller.token,
+      walletAddress: seller.walletAddress,
       body: {
         title: "Buy Test Art",
         prompt: "Test",
         imageUrl: "https://example.com/buy-art.png",
-        mintAddress: "BuyMint123",
       },
-    }) as any
+    })
   );
   artworkId = (await artRes.json()).id;
 
   const listRes = await createListing(
     makeRequest("/api/v1/listings", {
       method: "POST",
-      token: seller.token,
+      walletAddress: seller.walletAddress,
       body: { artworkId, priceSol: 2.5 },
-    }) as any
+    })
   );
   listingId = (await listRes.json()).id;
 });
@@ -74,9 +58,9 @@ describe("Purchase Flow", () => {
     const res = await buyListing(
       makeRequest(`/api/v1/listings/${listingId}/buy`, {
         method: "POST",
-        token: buyer.token,
+        walletAddress: buyer.walletAddress,
         body: { txSignature: "fakeTxSig123" },
-      }) as any,
+      }),
       makeParams({ id: listingId })
     );
 
@@ -145,36 +129,34 @@ describe("Purchase Flow", () => {
 
 describe("Purchase Validation", () => {
   test("rejects missing txSignature", async () => {
-    // Create another artwork + listing for this test
     const art2 = await createArtwork(
       makeRequest("/api/v1/artworks", {
         method: "POST",
-        token: seller.token,
+        walletAddress: seller.walletAddress,
         body: {
           title: "Buy Error Art",
           prompt: "Test",
           imageUrl: "https://example.com/buy-err.png",
-          mintAddress: "BuyErrMint",
         },
-      }) as any
+      })
     );
     const art2Id = (await art2.json()).id;
 
     const list2 = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        token: seller.token,
+        walletAddress: seller.walletAddress,
         body: { artworkId: art2Id, priceSol: 1 },
-      }) as any
+      })
     );
     const list2Id = (await list2.json()).id;
 
     const res = await buyListing(
       makeRequest(`/api/v1/listings/${list2Id}/buy`, {
         method: "POST",
-        token: buyer.token,
+        walletAddress: buyer.walletAddress,
         body: {},
-      }) as any,
+      }),
       makeParams({ id: list2Id })
     );
 
@@ -186,9 +168,9 @@ describe("Purchase Validation", () => {
     const res = await buyListing(
       makeRequest(`/api/v1/listings/${fakeId}/buy`, {
         method: "POST",
-        token: buyer.token,
+        walletAddress: buyer.walletAddress,
         body: { txSignature: "fakeTx" },
-      }) as any,
+      }),
       makeParams({ id: fakeId })
     );
 
@@ -199,21 +181,37 @@ describe("Purchase Validation", () => {
     const res = await buyListing(
       makeRequest(`/api/v1/listings/${listingId}/buy`, {
         method: "POST",
-        token: buyer.token,
+        walletAddress: buyer.walletAddress,
         body: { txSignature: "fakeTx2" },
-      }) as any,
+      }),
       makeParams({ id: listingId })
     );
 
     expect(res.status).toBe(404);
   });
 
+  test("rejects unregistered user (403)", async () => {
+    const user = await createUnregisteredUser();
+    userIds.push(user.userId);
+
+    const res = await buyListing(
+      makeRequest(`/api/v1/listings/${listingId}/buy`, {
+        method: "POST",
+        walletAddress: user.walletAddress,
+        body: { txSignature: "fakeTx3" },
+      }),
+      makeParams({ id: listingId })
+    );
+
+    expect(res.status).toBe(403);
+  });
+
   test("rejects unauthenticated request", async () => {
     const res = await buyListing(
       makeRequest(`/api/v1/listings/${listingId}/buy`, {
         method: "POST",
-        body: { txSignature: "fakeTx3" },
-      }) as any,
+        body: { txSignature: "fakeTx4" },
+      }),
       makeParams({ id: listingId })
     );
 

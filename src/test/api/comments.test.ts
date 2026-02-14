@@ -4,8 +4,7 @@ import {
   GET as listComments,
 } from "@/app/api/v1/artworks/[id]/comments/route";
 import { POST as createArtwork } from "@/app/api/v1/artworks/route";
-import { POST as registerAgent } from "@/app/api/v1/agents/register/route";
-import { createAuthenticatedAgent } from "../helpers/auth";
+import { createAuthenticatedAgent, createUnregisteredUser } from "../helpers/auth";
 import { cleanupTestUsers } from "../helpers/db";
 import { makeRequest, makeParams } from "../helpers/request";
 import { db } from "@/db";
@@ -14,43 +13,28 @@ import { activityLog } from "@/db/schema/activity-log";
 import { eq, and } from "drizzle-orm";
 
 const userIds: string[] = [];
-let agent1: { token: string; userId: string };
-let agent2: { token: string; userId: string };
+let agent1: { userId: string; walletAddress: string };
+let agent2: { userId: string; walletAddress: string };
 let artworkId: string;
 
 beforeAll(async () => {
   agent1 = await createAuthenticatedAgent();
   userIds.push(agent1.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: agent1.token,
-      body: { name: "CommentAgent1" },
-    }) as any
-  );
 
   agent2 = await createAuthenticatedAgent();
   userIds.push(agent2.userId);
-  await registerAgent(
-    makeRequest("/api/v1/agents/register", {
-      method: "POST",
-      token: agent2.token,
-      body: { name: "CommentAgent2" },
-    }) as any
-  );
 
   // Create artwork to comment on
   const artRes = await createArtwork(
     makeRequest("/api/v1/artworks", {
       method: "POST",
-      token: agent1.token,
+      walletAddress: agent1.walletAddress,
       body: {
         title: "Comment Test Art",
         prompt: "Test",
         imageUrl: "https://example.com/comment-art.png",
-        mintAddress: "CommentMint123",
       },
-    }) as any
+    })
   );
   artworkId = (await artRes.json()).id;
 });
@@ -64,9 +48,9 @@ describe("Comment Creation", () => {
     const res = await createComment(
       makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
         method: "POST",
-        token: agent1.token,
+        walletAddress: agent1.walletAddress,
         body: { content: "Great artwork!" },
-      }) as any,
+      }),
       makeParams({ id: artworkId })
     );
 
@@ -80,9 +64,9 @@ describe("Comment Creation", () => {
     const res = await createComment(
       makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
         method: "POST",
-        token: agent1.token,
+        walletAddress: agent1.walletAddress,
         body: { content: "Love it!", sentiment: "0.95" },
-      }) as any,
+      }),
       makeParams({ id: artworkId })
     );
 
@@ -94,13 +78,29 @@ describe("Comment Creation", () => {
     const res = await createComment(
       makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
         method: "POST",
-        token: agent1.token,
+        walletAddress: agent1.walletAddress,
         body: {},
-      }) as any,
+      }),
       makeParams({ id: artworkId })
     );
 
     expect(res.status).toBe(400);
+  });
+
+  test("rejects unregistered user (403)", async () => {
+    const user = await createUnregisteredUser();
+    userIds.push(user.userId);
+
+    const res = await createComment(
+      makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
+        method: "POST",
+        walletAddress: user.walletAddress,
+        body: { content: "I'm not registered" },
+      }),
+      makeParams({ id: artworkId })
+    );
+
+    expect(res.status).toBe(403);
   });
 
   test("rejects unauthenticated request", async () => {
@@ -108,7 +108,7 @@ describe("Comment Creation", () => {
       makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
         method: "POST",
         body: { content: "No auth" },
-      }) as any,
+      }),
       makeParams({ id: artworkId })
     );
 
@@ -122,7 +122,6 @@ describe("Comment Creation", () => {
       .where(eq(users.id, agent1.userId))
       .limit(1);
 
-    // We created 2 comments above
     expect(user.totalComments).toBeGreaterThanOrEqual(2);
   });
 
@@ -145,7 +144,7 @@ describe("Comment Creation", () => {
 describe("Comment Listing", () => {
   test("returns comments with author info", async () => {
     const res = await listComments(
-      makeRequest(`/api/v1/artworks/${artworkId}/comments`) as any,
+      makeRequest(`/api/v1/artworks/${artworkId}/comments`),
       makeParams({ id: artworkId })
     );
 
@@ -160,19 +159,18 @@ describe("Comment Listing", () => {
     const artRes = await createArtwork(
       makeRequest("/api/v1/artworks", {
         method: "POST",
-        token: agent1.token,
+        walletAddress: agent1.walletAddress,
         body: {
           title: "No Comments Art",
           prompt: "Test",
           imageUrl: "https://example.com/nocomments.png",
-          mintAddress: "NoCommentMint",
         },
-      }) as any
+      })
     );
     const artData = await artRes.json();
 
     const res = await listComments(
-      makeRequest(`/api/v1/artworks/${artData.id}/comments`) as any,
+      makeRequest(`/api/v1/artworks/${artData.id}/comments`),
       makeParams({ id: artData.id })
     );
 
@@ -182,18 +180,17 @@ describe("Comment Listing", () => {
   });
 
   test("shows comments from multiple authors", async () => {
-    // Agent2 adds a comment
     await createComment(
       makeRequest(`/api/v1/artworks/${artworkId}/comments`, {
         method: "POST",
-        token: agent2.token,
+        walletAddress: agent2.walletAddress,
         body: { content: "Nice work from agent2!" },
-      }) as any,
+      }),
       makeParams({ id: artworkId })
     );
 
     const res = await listComments(
-      makeRequest(`/api/v1/artworks/${artworkId}/comments`) as any,
+      makeRequest(`/api/v1/artworks/${artworkId}/comments`),
       makeParams({ id: artworkId })
     );
 

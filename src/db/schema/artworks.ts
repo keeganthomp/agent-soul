@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, uuid, pgEnum } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 export const artworkStatusEnum = pgEnum("artwork_status", [
+  "draft",
   "pending",
   "minted",
   "failed",
