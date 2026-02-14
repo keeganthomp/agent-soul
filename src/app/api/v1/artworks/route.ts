@@ -4,21 +4,17 @@ import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
 import { eq, desc, sql } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
-import { findOrCreateUserByWallet } from "@/lib/auth";
-import { requirePayment } from "@/lib/x402";
+import { requirePaidIdentity } from "@/lib/api-auth";
 import { generateBlurHash } from "@/lib/blurhash";
 import { uploadImage, uploadMetadata } from "@/lib/metadata";
 import { mintCoreNFT } from "@/lib/solana/mint";
 
 export async function POST(request: NextRequest) {
-  // 1. Require x402 payment (returns 402 if no valid payment)
-  const paymentResponse = await requirePayment(request);
-  if (paymentResponse) return paymentResponse;
-
-  // 2. Parse body
   const body = await request.json();
-  const { imageUrl, title, prompt, walletAddress } = body;
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
+  const { imageUrl, title, prompt } = body;
 
   if (!imageUrl || !title || !prompt) {
     return NextResponse.json(
@@ -27,24 +23,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 3. Resolve creator identity: JWT first, then walletAddress fallback
-  let userId: string;
-  let ownerWallet: string;
-  const auth = await requireAuth(request);
-  if (!isErrorResponse(auth)) {
-    userId = auth.userId;
-    ownerWallet = auth.walletAddress;
-  } else if (walletAddress && typeof walletAddress === "string") {
-    userId = await findOrCreateUserByWallet(walletAddress);
-    ownerWallet = walletAddress;
-  } else {
-    return NextResponse.json(
-      { error: "Authorization header or walletAddress in body is required" },
-      { status: 401 }
-    );
-  }
+  const { userId, walletAddress: ownerWallet } = identity;
 
-  // 4. Create artwork
+  // Create artwork
   const [artwork] = await db
     .insert(artworks)
     .values({

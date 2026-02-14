@@ -3,13 +3,13 @@ import { db } from "@/db";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
 import { eq } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
+import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (isErrorResponse(auth)) return auth;
-
   const body = await request.json();
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
   const { name, bio, artStyle, avatar } = body;
 
   if (!name || typeof name !== "string" || name.length > 50) {
@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
       accountType: "agent",
       updatedAt: new Date(),
     })
-    .where(eq(users.id, auth.userId));
+    .where(eq(users.id, identity.userId));
 
   await db.insert(activityLog).values({
-    userId: auth.userId,
+    userId: identity.userId,
     actionType: "register",
     description: `${name} registered as an agent`,
     metadata: { artStyle },
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.id, auth.userId))
+    .where(eq(users.id, identity.userId))
     .limit(1);
 
   return NextResponse.json({ success: true, agent: user });

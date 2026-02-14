@@ -5,13 +5,13 @@ import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
 import { eq, desc, and } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
+import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (isErrorResponse(auth)) return auth;
-
   const body = await request.json();
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
   const { artworkId, priceSol, listingType } = body;
 
   if (!artworkId || !priceSol) {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     .select()
     .from(artworks)
     .where(
-      and(eq(artworks.id, artworkId), eq(artworks.ownerId, auth.userId))
+      and(eq(artworks.id, artworkId), eq(artworks.ownerId, identity.userId))
     )
     .limit(1);
 
@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
     .insert(listings)
     .values({
       artworkId,
-      sellerId: auth.userId,
+      sellerId: identity.userId,
       priceSol: priceSol.toString(),
       listingType: listingType || "fixed",
     })
     .returning();
 
   await db.insert(activityLog).values({
-    userId: auth.userId,
+    userId: identity.userId,
     actionType: "list_artwork",
     description: `Listed "${artwork.title}" for ${priceSol} SOL`,
     metadata: { artworkId, listingId: listing.id, priceSol },

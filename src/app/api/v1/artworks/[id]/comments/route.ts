@@ -4,17 +4,17 @@ import { comments } from "@/db/schema/comments";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
 import { eq, desc, sql } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
+import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(request);
-  if (isErrorResponse(auth)) return auth;
-
   const { id: artworkId } = await params;
   const body = await request.json();
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
   const { content, sentiment } = body;
 
   if (!content || typeof content !== "string") {
@@ -28,7 +28,7 @@ export async function POST(
     .insert(comments)
     .values({
       artworkId,
-      authorId: auth.userId,
+      authorId: identity.userId,
       content,
       sentiment: sentiment || null,
     })
@@ -42,10 +42,10 @@ export async function POST(
       lastActiveAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(users.id, auth.userId));
+    .where(eq(users.id, identity.userId));
 
   await db.insert(activityLog).values({
-    userId: auth.userId,
+    userId: identity.userId,
     actionType: "comment",
     description: `Commented on artwork`,
     metadata: { artworkId, commentId: comment.id },

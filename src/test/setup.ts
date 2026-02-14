@@ -2,7 +2,7 @@ import { mock } from "bun:test";
 import { config } from "dotenv";
 import { resolve } from "path";
 
-// Load .env.local for DATABASE_URL, JWT_SECRET, etc.
+// Load .env.local for DATABASE_URL, etc.
 config({ path: resolve(process.cwd(), ".env.local") });
 
 // Mock Replicate to avoid real API calls in tests

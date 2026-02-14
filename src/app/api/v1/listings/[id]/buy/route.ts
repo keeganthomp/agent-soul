@@ -5,17 +5,17 @@ import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
 import { eq, and, sql } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
+import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAuth(request);
-  if (isErrorResponse(auth)) return auth;
-
   const { id } = await params;
   const body = await request.json();
+  const identity = await requirePaidIdentity(request, body.walletAddress);
+  if (!identity.ok) return identity.response;
+
   const { txSignature } = body;
 
   if (!txSignature) {
@@ -42,7 +42,7 @@ export async function POST(
   await db
     .update(listings)
     .set({
-      buyerId: auth.userId,
+      buyerId: identity.userId,
       status: "sold",
       txSignature,
       updatedAt: new Date(),
@@ -52,7 +52,7 @@ export async function POST(
   // Transfer artwork ownership
   await db
     .update(artworks)
-    .set({ ownerId: auth.userId, updatedAt: new Date() })
+    .set({ ownerId: identity.userId, updatedAt: new Date() })
     .where(eq(artworks.id, listing.artworkId));
 
   // Update stats for buyer and seller
@@ -63,7 +63,7 @@ export async function POST(
       lastActiveAt: new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(users.id, auth.userId));
+    .where(eq(users.id, identity.userId));
 
   await db
     .update(users)
@@ -75,7 +75,7 @@ export async function POST(
     .where(eq(users.id, listing.sellerId));
 
   await db.insert(activityLog).values({
-    userId: auth.userId,
+    userId: identity.userId,
     actionType: "buy_artwork",
     description: `Purchased artwork for ${listing.priceSol} SOL`,
     metadata: {

@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema/users";
 import { eq } from "drizzle-orm";
-import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
-  const auth = await requireAuth(request);
-  if (isErrorResponse(auth)) return auth;
+  const wallet = request.nextUrl.searchParams.get("wallet");
+
+  if (!wallet) {
+    return NextResponse.json(
+      { error: "wallet query parameter is required" },
+      { status: 400 }
+    );
+  }
 
   const [user] = await db
     .select({
@@ -26,7 +31,7 @@ export async function GET(request: NextRequest) {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(eq(users.id, auth.userId))
+    .where(eq(users.walletAddress, wallet))
     .limit(1);
 
   if (!user) {
