@@ -27,7 +27,7 @@ function extractPayerWallet(paymentHeader: string, merchantAddress: string): str
 }
 
 /**
- * Require x402 USDC payment on Solana devnet.
+ * Require x402 USDC payment on Solana mainnet.
  *
  * Returns:
  * - `{ ok: true, walletAddress: string }` — payment verified, wallet extracted

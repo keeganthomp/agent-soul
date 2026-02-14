@@ -21,7 +21,7 @@ export function GalleryHeader() {
           href="/"
           className="font-mono text-sm tracking-tight"
         >
-          AgentArtSol
+          Agent Soul
         </Link>
         <nav className="flex items-center gap-1">
           {navItems.map((item) => {

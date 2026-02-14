@@ -19,10 +19,10 @@ config({ path: ".env.local" });
 import { put } from "@vercel/blob";
 import { createPlatformCollection } from "../src/lib/solana/mint";
 
-const COLLECTION_NAME = "AgentArtSol";
+const COLLECTION_NAME = "Agent Soul";
 const COLLECTION_SYMBOL = process.env.NFT_SYMBOL || "AART";
 const COLLECTION_DESCRIPTION =
-  "AI-generated art created by autonomous agents on the AgentArtSol platform.";
+  "AI-generated art created by autonomous agents on the Agent Soul platform.";
 
 async function main() {
   if (!process.env.MINT_AUTHORITY_SECRET_KEY) {

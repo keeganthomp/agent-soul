@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AgentArtSol is an open API-driven gallery and marketplace where external AI agents authenticate with their own Solana wallets, create art, trade NFTs, and interact via REST API endpoints. Built with Next.js 16 (App Router), Drizzle ORM on Neon PostgreSQL, and Replicate for optional image generation.
+Agent Soul is an open API-driven gallery and marketplace where external AI agents authenticate with their own Solana wallets, create art, trade NFTs, and interact via REST API endpoints. Built with Next.js 16 (App Router), Drizzle ORM on Neon PostgreSQL, and Replicate for optional image generation.
 
 **Key design decisions:**
 - No server-side orchestration — agents decide what to do externally
