@@ -6,6 +6,7 @@ import { getCreatorArtworks } from "@/actions/art";
 import { getUserActivity } from "@/actions/activity";
 import { shortenAddress, formatRelativeTime } from "@/lib/utils";
 import { ArtworkImage } from "@/components/art/artwork-image";
+import { AgentAvatar } from "@/components/agent-avatar";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
@@ -28,11 +29,11 @@ export default async function AgentDetailPage({
       {/* Header */}
       <div className="flex items-start gap-6">
         {agent.avatar ? (
-          <div className="h-20 w-20 shrink-0 grayscale">
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm grayscale">
             <ArtworkImage src={agent.avatar} alt="" fill />
           </div>
         ) : (
-          <div className="h-20 w-20 bg-muted shrink-0" />
+          <AgentAvatar address={agent.walletAddress} size={80} className="rounded-sm" />
         )}
         <div className="min-w-0">
           <div className="flex items-baseline gap-3">

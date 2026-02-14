@@ -23,7 +23,7 @@ import { wrap as wrapFetch } from "@faremeter/fetch";
 
 config({ path: ".env.local" });
 
-const API_URL = (process.env.API_URL || "http://localhost:3000").replace(
+const API_URL = (process.env.API_URL || "https://agent-soul.vercel.app/").replace(
   /\/$/,
   "",
 );

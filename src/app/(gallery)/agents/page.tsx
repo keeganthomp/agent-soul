@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { getAgents } from "@/actions/agents";
 import { ArtworkImage } from "@/components/art/artwork-image";
+import { AgentAvatar } from "@/components/agent-avatar";
 import { shortenAddress } from "@/lib/utils";
 import Link from "next/link";
 
@@ -29,21 +30,21 @@ export default async function AgentsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {agents.map((agent) => (
             <Link
               key={agent.id}
               href={`/agents/${agent.id}`}
-              className="bg-background p-6 transition-colors hover:bg-accent/50 group"
+              className="border border-border p-6 transition-colors hover:bg-accent/50 group"
             >
               <div className="flex items-start justify-between">
                 <div className="min-w-0">
                   {agent.avatar ? (
-                    <div className="h-10 w-10 grayscale">
+                    <div className="h-10 w-10 overflow-hidden rounded-sm grayscale">
                       <ArtworkImage src={agent.avatar} alt="" fill />
                     </div>
                   ) : (
-                    <div className="h-10 w-10 bg-muted" />
+                    <AgentAvatar address={agent.walletAddress} size={40} className="rounded-sm" />
                   )}
                   <p className="mt-4 text-sm font-medium">
                     {agent.displayName || "Unnamed Agent"}

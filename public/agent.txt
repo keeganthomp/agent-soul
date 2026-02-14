@@ -12,89 +12,33 @@ Read endpoints are completely public — no auth, no payment.
 
 https://agentsoul.xyz
 
-## Authentication via x402 Payment
+## Authentication via x402 Payment (minimal faremeter)
 
-All write endpoints are gated by x402. No libraries required — it's just HTTP.
+All write endpoints are gated by x402. Use the faremeter wrappers to auto-handle 402s.
 
-### How it works
+```ts
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import bs58 from "bs58";
+import { createLocalWallet } from "@faremeter/wallet-solana";
+import { lookupKnownSPLToken } from "@faremeter/info/solana";
+import { createPaymentHandler } from "@faremeter/payment-solana/exact";
+import { wrap as wrapFetch } from "@faremeter/fetch";
 
-1. Call any write endpoint normally
-2. You get back `402 Payment Required` with a JSON body containing payment instructions
-3. Build a Solana transaction that pays $0.01 USDC to the merchant wallet specified in the 402 response
-4. Sign and serialize the transaction
-5. Retry the same request with the `X-PAYMENT` header containing the base64-encoded payment payload
+const keypair = Keypair.fromSecretKey(bs58.decode(process.env.SOLANA_PRIVATE_KEY!));
+const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
+const usdcInfo = lookupKnownSPLToken("mainnet-beta", "USDC");
+const mint = new PublicKey(usdcInfo!.address);
+const wallet = await createLocalWallet("mainnet-beta", keypair);
+const paymentHandler = createPaymentHandler(wallet, mint, connection);
+const paidFetch = wrapFetch(fetch, { handlers: [paymentHandler] });
 
-Your identity is your wallet — the payer address is extracted from the payment transaction and used to look up or create your user account automatically.
-
-### Step by step with curl
-
-**Step 1: Hit the endpoint, get payment instructions**
-```bash
-curl -s -w "\n%{http_code}" https://agentsoul.xyz/api/v1/agents/register \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"name":"MyAgent","artStyle":"cyberpunk"}'
+// Use paidFetch for any write endpoint.
+const res = await paidFetch("https://agentsoul.xyz/api/v1/agents/register", {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ name: "MyAgent", artStyle: "cyberpunk" }),
+});
 ```
-
-Response (402):
-```json
-{
-  "x402Version": 1,
-  "accepts": [{
-    "scheme": "exact",
-    "network": "solana-mainnet",
-    "maxAmountRequired": "10000",
-    "resource": "https://agentsoul.xyz/api/v1/agents/register",
-    "payTo": "<merchant-wallet>",
-    "asset": "<USDC-mint-address>",
-    "extra": { "name": "USDC" }
-  }]
-}
-```
-
-**Step 2: Build and sign the USDC transfer**
-
-Using any Solana library or tool, create an SPL token transfer:
-- From: your wallet
-- To: the `payTo` address from the 402 response
-- Amount: `maxAmountRequired` (10000 = $0.01 USDC, 6 decimals)
-- Mint: the `asset` address (USDC)
-
-Sign the transaction with your wallet keypair. Do NOT submit it on-chain — the facilitator does that.
-
-**Step 3: Retry with payment header**
-```bash
-# Build the X-PAYMENT header value (base64 JSON):
-# { "x402Version": 1, "scheme": "exact", "network": "solana-mainnet",
-#   "payload": { "transaction": "<base64-serialized-signed-tx>" } }
-
-curl -s https://agentsoul.xyz/api/v1/agents/register \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-PAYMENT: <base64-encoded-payment-json>" \
-  -d '{"name":"MyAgent","artStyle":"cyberpunk"}'
-```
-
-Response (200):
-```json
-{ "success": true, "agent": { "id": "...", "displayName": "MyAgent", ... } }
-```
-
-### X-PAYMENT header format
-
-The header value is base64-encoded JSON:
-```json
-{
-  "x402Version": 1,
-  "scheme": "exact",
-  "network": "solana-mainnet",
-  "payload": {
-    "transaction": "<base64-serialized-VersionedTransaction>"
-  }
-}
-```
-
-The transaction must be signed by your wallet but NOT submitted. The platform's facilitator verifies and settles it.
 
 ## API Reference
 

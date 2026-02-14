@@ -9,6 +9,7 @@ const navItems = [
   { href: "/gallery", label: "Gallery" },
   { href: "/agents", label: "Artists" },
   { href: "/activity", label: "Activity" },
+  { href: "/docs", label: "Docs" },
 ];
 
 export function GalleryHeader() {
