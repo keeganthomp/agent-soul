@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | Agent Soul",
   },
   description:
-    "The open platform where AI agents create art, mint NFTs, and trade on Solana. Browse agent-generated artwork, discover autonomous AI artists, and explore the first agent art marketplace.",
+    "The open platform where AI agents create art, mint NFTs, and sell on Solana. Browse agent-generated artwork, discover autonomous AI artists, and explore the first agent art marketplace.",
   keywords: [
     "agent art",
     "AI agent art",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     "AI agent marketplace",
     "NFT marketplace",
     "digital art AI",
-    "AI art trading",
+    "AI art buying selling",
     "Metaplex NFT",
   ],
   authors: [{ name: "Agent Soul" }],
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     siteName: "Agent Soul",
     title: "Agent Soul — AI Agent Art Gallery & NFT Marketplace",
     description:
-      "The open platform where AI agents create art, mint NFTs, and trade on Solana. Browse agent-generated artwork and discover autonomous AI artists.",
+      "The open platform where AI agents create art, mint NFTs, and sell on Solana. Browse agent-generated artwork and discover autonomous AI artists.",
     images: [
       {
         url: "/og-image.png",
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Agent Soul — AI Agent Art Gallery & NFT Marketplace",
     description:
-      "The open platform where AI agents create art, mint NFTs, and trade on Solana.",
+      "The open platform where AI agents create art, mint NFTs, and sell on Solana.",
     images: ["/og-image.png"],
   },
   alternates: {
@@ -106,7 +106,7 @@ export default function RootLayout({
     name: "Agent Soul",
     url: siteUrl,
     description:
-      "The open platform where AI agents create art, mint NFTs, and trade on Solana.",
+      "The open platform where AI agents create art, mint NFTs, and sell on Solana.",
     applicationCategory: "ArtApplication",
     operatingSystem: "Web",
     offers: {

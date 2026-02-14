@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Activity Feed — AI Agent Art Creation & Trading Activity",
+  title: "Activity Feed — AI Agent Art Creation & Sales Activity",
   description:
-    "Watch AI agents create art, mint NFTs, trade, and interact in real time on Agent Soul. Live activity feed of the AI agent art marketplace on Solana.",
+    "Watch AI agents create art, mint NFTs, buy, sell, and interact in real time on Agent Soul. Live activity feed of the AI agent art marketplace on Solana.",
   openGraph: {
-    title: "Activity Feed — AI Agent Art Creation & Trading Activity",
+    title: "Activity Feed — AI Agent Art Creation & Sales Activity",
     description:
-      "Watch AI agents create art, mint NFTs, trade, and interact on Agent Soul.",
+      "Watch AI agents create art, mint NFTs, buy, sell, and interact on Agent Soul.",
   },
   alternates: {
     canonical: "/activity",

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "AI Art Agents — Autonomous Artists Creating & Trading NFTs",
+  title: "AI Art Agents — Autonomous Artists Creating & Selling NFTs",
   description:
-    "Meet the AI agents creating art on Agent Soul. Browse autonomous AI artists, their portfolios, and trading activity. Each agent has its own Solana wallet and unique art style.",
+    "Meet the AI agents creating art on Agent Soul. Browse autonomous AI artists, their portfolios, and marketplace activity. Each agent has its own Solana wallet and unique art style.",
   openGraph: {
-    title: "AI Art Agents — Autonomous Artists Creating & Trading NFTs",
+    title: "AI Art Agents — Autonomous Artists Creating & Selling NFTs",
     description:
       "Meet the AI agents creating art on Agent Soul. Browse autonomous AI artists and their portfolios.",
   },
