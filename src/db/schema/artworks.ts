@@ -21,6 +21,7 @@ export const artworks = pgTable("artworks", {
   ownerId: uuid("owner_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   blurHash: text("blur_hash"),
+  metadataJson: text("metadata_json"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

@@ -14,9 +14,13 @@
  */
 
 import { config } from "dotenv";
-import { Keypair } from "@solana/web3.js";
+import { Keypair, Connection, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import nacl from "tweetnacl";
+import { createLocalWallet } from "@faremeter/wallet-solana";
+import { lookupKnownSPLToken } from "@faremeter/info/solana";
+import { createPaymentHandler } from "@faremeter/payment-solana/exact";
+import { wrap as wrapFetch } from "@faremeter/fetch";
 
 config({ path: ".env.local" });
 
@@ -42,6 +46,22 @@ if (!secretKey) {
 const keypair = Keypair.fromSecretKey(bs58.decode(secretKey));
 const walletAddress = keypair.publicKey.toBase58();
 console.log(`Wallet: ${walletAddress}`);
+
+// ---------------------------------------------------------------------------
+// x402 payment setup — wraps fetch to auto-handle 402 responses
+// ---------------------------------------------------------------------------
+
+const solanaNetwork = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "mainnet-beta" ? "mainnet-beta" : "devnet";
+const rpcUrl = process.env.SOLANA_RPC_URL || (solanaNetwork === "mainnet-beta"
+  ? "https://api.mainnet-beta.solana.com"
+  : "https://api.devnet.solana.com");
+const connection = new Connection(rpcUrl, "confirmed");
+const usdcInfo = lookupKnownSPLToken(solanaNetwork, "USDC");
+if (!usdcInfo) throw new Error(`USDC not found for network ${solanaNetwork}`);
+const mint = new PublicKey(usdcInfo.address);
+const wallet = await createLocalWallet(solanaNetwork, keypair);
+const paymentHandler = createPaymentHandler(wallet, mint, connection);
+const paidFetch = wrapFetch(fetch, { handlers: [paymentHandler] });
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -132,16 +152,11 @@ console.log(`  Image URL: ${genData.imageUrl}`);
 // 3. Submit artwork
 // ---------------------------------------------------------------------------
 
-console.log("\n=== Step 3: Submit Artwork ===");
+console.log("\n=== Step 3: Submit Artwork (with x402 payment) ===");
 
 const title = `E2E Test Art — ${new Date().toISOString()}`;
 
-const { status: artStatus, data: artData } = await api<{
-  id?: string;
-  title?: string;
-  imageUrl?: string;
-  error?: string;
-}>("/api/v1/artworks", {
+const artRes = await paidFetch(`${API_URL}/api/v1/artworks`, {
   method: "POST",
   headers: authHeaders,
   body: JSON.stringify({
@@ -151,23 +166,22 @@ const { status: artStatus, data: artData } = await api<{
   }),
 });
 
-// The artworks POST may require x402 payment — if so, 402 is expected
-if (artStatus === 402) {
-  console.log(
-    "  Artwork submission returned 402 (x402 payment required) — skipping.",
-  );
-  console.log(
-    "  To test artwork submission, configure FACILITATOR_URL and MERCHANT_SOLANA_ADDRESS.",
-  );
-} else {
-  assert(
-    artStatus === 201,
-    `artworks POST should return 201, got ${artStatus}`,
-  );
-  assert(!!artData.id, "should receive artwork id");
-  console.log("  Artwork created:");
-  console.log(JSON.stringify(artData, null, 2));
-}
+const artData = (await artRes.json()) as {
+  id?: string;
+  title?: string;
+  imageUrl?: string;
+  status?: string;
+  mintAddress?: string;
+  error?: string;
+};
+
+assert(
+  artRes.status === 201,
+  `artworks POST should return 201, got ${artRes.status}: ${JSON.stringify(artData)}`,
+);
+assert(!!artData.id, "should receive artwork id");
+console.log("  Artwork created:");
+console.log(JSON.stringify(artData, null, 2));
 
 // ---------------------------------------------------------------------------
 // Done

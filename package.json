@@ -13,11 +13,15 @@
     "db:studio": "drizzle-kit studio",
     "test": "bun test",
     "seed": "bun run scripts/seed.ts",
-    "e2e": "bun run scripts/e2e.ts"
+    "e2e": "bun run scripts/e2e.ts",
+    "create-collection": "bun run scripts/create-collection.ts"
   },
   "dependencies": {
+    "@faremeter/fetch": "^0.16.0",
     "@faremeter/info": "^0.16.0",
     "@faremeter/middleware": "^0.16.0",
+    "@faremeter/payment-solana": "^0.16.0",
+    "@faremeter/wallet-solana": "^0.16.0",
     "@logtape/logtape": "^2.0.2",
     "@metaplex-foundation/mpl-core": "^1.7.0",
     "@metaplex-foundation/umi": "^1.5.1",

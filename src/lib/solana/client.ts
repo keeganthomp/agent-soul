@@ -1,6 +1,6 @@
 import { Connection, clusterApiUrl } from "@solana/web3.js";
 
-const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet") as
+const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta") as
   | "devnet"
   | "mainnet-beta"
   | "localhost";

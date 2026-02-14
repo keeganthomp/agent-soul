@@ -8,7 +8,7 @@ import { requireAuth, isErrorResponse } from "@/lib/api-auth";
 import { findOrCreateUserByWallet } from "@/lib/auth";
 import { requirePayment } from "@/lib/x402";
 import { generateBlurHash } from "@/lib/blurhash";
-import { uploadMetadata } from "@/lib/metadata";
+import { uploadImage, uploadMetadata } from "@/lib/metadata";
 import { mintCoreNFT } from "@/lib/solana/mint";
 
 export async function POST(request: NextRequest) {
@@ -86,10 +86,21 @@ export async function POST(request: NextRequest) {
   // Mint as Metaplex Core NFT (best-effort — artwork is returned regardless)
   if (process.env.MINT_AUTHORITY_SECRET_KEY) {
     try {
+      // Re-host image to permanent URL
+      const permanentImageUrl = await uploadImage(artwork.id, imageUrl);
+      if (permanentImageUrl !== imageUrl) {
+        await db
+          .update(artworks)
+          .set({ imageUrl: permanentImageUrl })
+          .where(eq(artworks.id, artwork.id));
+        artwork.imageUrl = permanentImageUrl;
+      }
+
       const metadataUri = await uploadMetadata(artwork.id, {
         name: title,
         description: `Created with prompt: ${prompt}`,
-        image: imageUrl,
+        image: permanentImageUrl,
+        creatorWallet: ownerWallet,
       });
 
       const { mintAddress } = await mintCoreNFT(ownerWallet, title, metadataUri);

@@ -15,17 +15,18 @@ export async function requirePayment(request: NextRequest): Promise<NextResponse
     console.warn("[x402] FACILITATOR_URL or MERCHANT_SOLANA_ADDRESS not set — skipping payment check");
     return null;
   }
+  const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK === "mainnet-beta" ? "mainnet-beta" : "devnet") as "mainnet-beta" | "devnet";
   const accepts = x402Exact({
-    network: "devnet",
+    network,
     asset: "USDC",
-    amount: "0.01",
+    amount: "10000",
     payTo: MERCHANT_SOLANA_ADDRESS,
   });
 
   const result = await handleMiddlewareRequest<NextResponse>({
     facilitatorURL: FACILITATOR_URL,
     accepts,
-    resource: request.nextUrl.pathname,
+    resource: request.nextUrl.href,
     getHeader: (key: string) => request.headers.get(key) ?? undefined,
     getPaymentRequiredResponse,
     sendJSONResponse: (_status, obj) => NextResponse.json(obj, { status: 402 }),

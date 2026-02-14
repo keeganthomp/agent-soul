@@ -7,7 +7,12 @@ import {
   type Umi,
   type KeypairSigner,
 } from "@metaplex-foundation/umi";
-import { create } from "@metaplex-foundation/mpl-core";
+import {
+  create,
+  createCollection,
+  fetchCollection,
+  type CollectionV1,
+} from "@metaplex-foundation/mpl-core";
 import { clusterApiUrl } from "@solana/web3.js";
 import bs58 from "bs58";
 
@@ -44,22 +49,92 @@ function getUmi(): { umi: Umi; authority: KeypairSigner } {
   return { umi: _umi, authority: _authority };
 }
 
+// Cached collection fetch
+let _cachedCollection: CollectionV1 | null | undefined = undefined;
+
+async function getCollection(): Promise<CollectionV1 | null> {
+  if (_cachedCollection !== undefined) return _cachedCollection;
+
+  const collectionAddress = process.env.COLLECTION_MINT_ADDRESS;
+  if (!collectionAddress) {
+    _cachedCollection = null;
+    return null;
+  }
+
+  const { umi } = getUmi();
+  try {
+    _cachedCollection = await fetchCollection(umi, publicKey(collectionAddress));
+    return _cachedCollection;
+  } catch (err) {
+    console.error("Failed to fetch collection:", err);
+    _cachedCollection = null;
+    return null;
+  }
+}
+
 export async function mintCoreNFT(
   ownerWalletAddress: string,
   name: string,
   metadataUri: string
 ): Promise<{ mintAddress: string }> {
   const { umi, authority } = getUmi();
-
   const asset = generateSigner(umi);
+
+  const basisPoints = parseInt(
+    process.env.ROYALTY_BASIS_POINTS || "500",
+    10
+  );
+
+  const collection = await getCollection();
 
   await create(umi, {
     asset,
     name,
     uri: metadataUri,
     owner: publicKey(ownerWalletAddress),
-    updateAuthority: authority.publicKey,
+    ...(!collection && { updateAuthority: authority.publicKey }),
+    plugins: [
+      {
+        type: "Royalties",
+        basisPoints,
+        creators: [{ address: authority.publicKey, percentage: 100 }],
+        ruleSet: { type: "None" },
+      },
+    ],
+    ...(collection && { collection }),
   }).sendAndConfirm(umi);
 
   return { mintAddress: asset.publicKey.toString() };
+}
+
+/**
+ * Create a platform collection NFT. Used by the setup script.
+ */
+export async function createPlatformCollection(opts: {
+  name: string;
+  uri: string;
+}): Promise<{ collectionAddress: string }> {
+  const { umi, authority } = getUmi();
+  const collectionSigner = generateSigner(umi);
+
+  const basisPoints = parseInt(
+    process.env.ROYALTY_BASIS_POINTS || "500",
+    10
+  );
+
+  await createCollection(umi, {
+    collection: collectionSigner,
+    name: opts.name,
+    uri: opts.uri,
+    plugins: [
+      {
+        type: "Royalties",
+        basisPoints,
+        creators: [{ address: authority.publicKey, percentage: 100 }],
+        ruleSet: { type: "None" },
+      },
+    ],
+  }).sendAndConfirm(umi);
+
+  return { collectionAddress: collectionSigner.publicKey.toString() };
 }
