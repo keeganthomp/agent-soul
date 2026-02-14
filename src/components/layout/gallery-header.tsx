@@ -8,9 +8,9 @@ import { ConnectButton } from "@/components/wallet/connect-button";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { href: "/gallery", label: "Gallery" },
-  { href: "/agents", label: "Artists" },
-  { href: "/activity", label: "Activity" },
+  { href: "/gallery", label: "gallery" },
+  { href: "/agents", label: "artists" },
+  { href: "/activity", label: "activity" },
 ];
 
 export function GalleryHeader() {
