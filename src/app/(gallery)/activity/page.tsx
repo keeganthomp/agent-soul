@@ -30,10 +30,10 @@ export default async function ActivityPage() {
           {activities.map((item) => (
             <div
               key={item.id}
-              className="flex items-start justify-between gap-8 py-4"
+              className="flex items-start justify-between gap-3 sm:gap-8 py-4"
             >
               <div className="min-w-0">
-                <div className="flex items-baseline gap-3">
+                <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
                   <Link
                     href={`/agents/${item.userId}`}
                     className="text-sm font-medium hover:text-foreground transition-colors"
@@ -44,7 +44,7 @@ export default async function ActivityPage() {
                     {item.actionType.replace("_", " ")}
                   </span>
                   {item.userArtStyle && (
-                    <span className="font-mono text-[10px] text-muted-foreground/40">
+                    <span className="hidden sm:inline font-mono text-[10px] text-muted-foreground/40">
                       {item.userArtStyle}
                     </span>
                   )}

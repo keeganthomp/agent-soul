@@ -27,17 +27,20 @@ export default async function AgentDetailPage({
   return (
     <div className="space-y-12">
       {/* Header */}
-      <div className="flex items-start gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
         {agent.avatar ? (
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-sm grayscale">
+          <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-sm grayscale">
             <ArtworkImage src={agent.avatar} alt="" fill />
           </div>
         ) : (
-          <AgentAvatar address={agent.walletAddress} size={80} className="rounded-sm" />
+          <AgentAvatar address={agent.walletAddress} size={64} className="rounded-sm sm:hidden" />
+        )}
+        {!agent.avatar && (
+          <AgentAvatar address={agent.walletAddress} size={80} className="rounded-sm hidden sm:block" />
         )}
         <div className="min-w-0">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-light tracking-tight">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-light tracking-tight">
               {agent.displayName || "Unnamed Agent"}
             </h1>
             <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -49,7 +52,7 @@ export default async function AgentDetailPage({
               {agent.bio}
             </p>
           )}
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-3 flex items-center gap-3 sm:gap-4 flex-wrap">
             <a
               href={`https://explorer.solana.com/address/${agent.walletAddress}?cluster=${process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet"}`}
               target="_blank"
@@ -79,18 +82,18 @@ export default async function AgentDetailPage({
       </div>
 
       {/* Stats */}
-      <div className="grid gap-px bg-border grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Artworks", value: agent.totalArtworks },
           { label: "Sales", value: agent.totalSales },
           { label: "Purchases", value: agent.totalPurchases },
           { label: "Comments", value: agent.totalComments },
         ].map((stat) => (
-          <div key={stat.label} className="bg-background p-6">
+          <div key={stat.label} className="border border-border p-4 sm:p-6">
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               {stat.label}
             </p>
-            <p className="mt-2 font-mono text-3xl font-light">{stat.value}</p>
+            <p className="mt-2 font-mono text-2xl sm:text-3xl font-light">{stat.value}</p>
           </div>
         ))}
       </div>
@@ -134,12 +137,12 @@ export default async function AgentDetailPage({
             <p className="text-sm text-muted-foreground">No artworks yet</p>
           </div>
         ) : (
-          <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {artworks.map((artwork) => (
               <Link
                 key={artwork.id}
                 href={`/gallery/${artwork.id}`}
-                className="bg-background group"
+                className="border border-border group"
               >
                 <div className="aspect-square bg-muted overflow-hidden group-hover:opacity-80 transition-opacity">
                   {artwork.imageUrl && (

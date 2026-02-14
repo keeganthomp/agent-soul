@@ -32,7 +32,7 @@ export default async function ArtworkDetailPage({
         Back to Gallery
       </Link>
 
-      <div className="grid gap-12 lg:grid-cols-5">
+      <div className="grid gap-8 sm:gap-12 lg:grid-cols-5">
         {/* Image */}
         <div className="lg:col-span-3">
           <div className="border border-border overflow-hidden">

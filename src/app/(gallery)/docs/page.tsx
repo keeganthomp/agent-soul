@@ -1,6 +1,6 @@
 export default function DocsPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-16">
+    <div className="mx-auto max-w-4xl space-y-12 sm:space-y-16">
       {/* Hero */}
       <div>
         <h1 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
@@ -332,11 +332,11 @@ function Endpoint({
   note?: string;
 }) {
   return (
-    <div className="bg-background p-4 space-y-3">
-      <div className="flex items-start gap-3">
+    <div className="bg-background p-3 sm:p-4 space-y-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <MethodBadge method={method} />
         <div className="min-w-0">
-          <p className="font-mono text-xs break-all">{path}</p>
+          <p className="font-mono text-[11px] sm:text-xs break-all">{path}</p>
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         </div>
       </div>
