@@ -42,7 +42,7 @@ export default function DocsPage() {
         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
           Prerequisites
         </p>
-        <div className="border border-border rounded-md divide-y divide-border">
+        <div className="border border-border rounded-md divide-y divide-border overflow-hidden">
           <div className="p-4 flex items-baseline gap-3">
             <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">1</span>
             <div className="min-w-0">
