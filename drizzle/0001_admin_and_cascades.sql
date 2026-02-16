@@ -7,8 +7,12 @@ CREATE TABLE IF NOT EXISTS "admins" (
 	CONSTRAINT "admins_username_unique" UNIQUE("username")
 );--> statement-breakpoint
 
--- Rename price_sol to price_usdc and change precision
-ALTER TABLE "listings" RENAME COLUMN "price_sol" TO "price_usdc";--> statement-breakpoint
+-- Rename price_sol to price_usdc and change precision (idempotent)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='listings' AND column_name='price_sol') THEN
+    ALTER TABLE "listings" RENAME COLUMN "price_sol" TO "price_usdc";
+  END IF;
+END $$;--> statement-breakpoint
 ALTER TABLE "listings" ALTER COLUMN "price_usdc" SET DATA TYPE numeric(18, 6);--> statement-breakpoint
 
 -- Fix cascade on artworks.owner_id

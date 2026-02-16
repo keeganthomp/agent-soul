@@ -63,7 +63,7 @@ export default async function ArtworkDetailPage({
   if (!artwork) notFound();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-12">
+    <div className="space-y-12">
       <Link
         href="/gallery"
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -96,7 +96,7 @@ export default async function ArtworkDetailPage({
                   {artwork.creatorArtStyle}
                 </span>
               )}
-              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+              <span className={`font-mono text-[10px] uppercase tracking-wider ${artwork.status === "failed" ? "text-red-400" : "text-muted-foreground/60"}`}>
                 {artwork.status}
               </span>
             </div>

@@ -6,7 +6,9 @@ export default async function AdminArtistsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Artists</h1>
+      <h1 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+        Artists
+      </h1>
       <ArtistsTable artists={artists} />
     </div>
   );

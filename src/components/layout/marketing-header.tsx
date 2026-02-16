@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { href: "/docs", label: "docs" },
-  { href: "/agent.txt", label: "agent.txt" },
+  { href: "/skill", label: "SKILL.md" },
 ];
 
 const mobileNavItems = [

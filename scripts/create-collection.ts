@@ -42,9 +42,7 @@ async function main() {
     description: COLLECTION_DESCRIPTION,
     image: "", // Will be updated if an image is provided
     seller_fee_basis_points: sellerFeeBasisPoints,
-    ...(process.env.NEXT_PUBLIC_APP_URL && {
-      external_url: process.env.NEXT_PUBLIC_APP_URL,
-    }),
+    external_url: "https://agentsoul.art",
     properties: {
       category: "image",
       creators: [],
@@ -62,6 +60,8 @@ async function main() {
       {
         contentType: "application/json",
         access: "public",
+        addRandomSuffix: false,
+        allowOverwrite: true,
       }
     );
     metadataUri = blob.url;

@@ -32,11 +32,7 @@ export default async function GalleryPage() {
   );
 
   return (
-    <div className="space-y-8">
-      <p className="text-2xl font-light tracking-tight">
-        Art by agents
-      </p>
-
+    <div>
       {artworks.length === 0 ? (
         <div className="border border-dashed border-border py-24 text-center">
           <p className="text-sm text-muted-foreground">No artworks yet</p>
@@ -45,37 +41,35 @@ export default async function GalleryPage() {
           </p>
         </div>
       ) : (
-        <div className="columns-1 gap-px sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5">
+        <div className="columns-2 gap-3 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
           {artworks.map((artwork) => {
             const listing = listingsByArtwork.get(artwork.id);
             return (
               <Link
                 key={artwork.id}
                 href={`/gallery/${artwork.id}`}
-                className="mb-px block group break-inside-avoid"
+                className="mb-3 block group break-inside-avoid"
               >
-                <div className="aspect-square bg-muted overflow-hidden relative group-hover:opacity-80 transition-opacity">
-                  <ArtworkImage
-                    src={artwork.imageUrl}
-                    alt={artwork.title}
-                    blurHash={artwork.blurHash}
-                    fill
-                  />
-                  {listing && (
-                    <span className="absolute bottom-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 font-mono text-xs">
-                      {listing.priceUsdc} USDC
-                    </span>
-                  )}
-                </div>
-                <div className="bg-background p-3 border-b border-border overflow-hidden">
-                  <p className="text-sm truncate">{artwork.title}</p>
-                  <div className="mt-1 flex items-center justify-between gap-2 min-w-0">
-                    <span className="text-xs text-muted-foreground truncate shrink min-w-0">
-                      {artwork.creatorName || "Unknown"}
-                    </span>
-                    {artwork.creatorArtStyle && (
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60 shrink-0">
-                        {artwork.creatorArtStyle}
+                <div className="overflow-hidden rounded-sm bg-muted">
+                  <div className="relative">
+                    <ArtworkImage
+                      src={artwork.imageUrl}
+                      alt={artwork.title}
+                      blurHash={artwork.blurHash}
+                    />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300" />
+                    <div className="absolute inset-0 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <p className="text-white text-sm font-medium leading-tight">
+                        {artwork.title}
+                      </p>
+                      <p className="text-white/70 text-xs mt-1">
+                        {artwork.creatorName || "Unknown"}
+                      </p>
+                    </div>
+                    {listing && (
+                      <span className="absolute top-2 right-2 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2 py-0.5 font-mono text-[10px] rounded-full">
+                        {listing.priceUsdc} USDC
                       </span>
                     )}
                   </div>

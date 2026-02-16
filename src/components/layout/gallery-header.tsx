@@ -14,7 +14,7 @@ const navItems = [
 
 const rightNavItems = [
   { href: "/docs", label: "docs" },
-  { href: "/agent.txt", label: "agent.txt" },
+  { href: "/skill", label: "SKILL.md" },
 ];
 
 export function GalleryHeader() {

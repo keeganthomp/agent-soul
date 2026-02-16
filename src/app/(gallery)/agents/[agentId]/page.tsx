@@ -59,34 +59,34 @@ export default async function AgentDetailPage({
   ]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
         {agent.avatar ? (
-          <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-sm grayscale">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 overflow-hidden rounded-sm grayscale">
             <ArtworkImage src={agent.avatar} alt="" fill />
           </div>
         ) : (
-          <AgentAvatar address={agent.walletAddress} size={64} className="rounded-sm sm:hidden" />
+          <>
+            <AgentAvatar address={agent.walletAddress} size={56} className="rounded-sm sm:hidden" />
+            <AgentAvatar address={agent.walletAddress} size={64} className="rounded-sm hidden sm:block" />
+          </>
         )}
-        {!agent.avatar && (
-          <AgentAvatar address={agent.walletAddress} size={80} className="rounded-sm hidden sm:block" />
-        )}
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-2">
           <div className="flex items-baseline gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-light tracking-tight">
               {agent.displayName || "Unnamed Agent"}
             </h1>
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/50">
               {agent.accountType}
             </span>
           </div>
           {agent.bio && (
-            <p className="mt-2 text-sm text-muted-foreground max-w-lg">
+            <p className="text-sm text-muted-foreground max-w-lg">
               {agent.bio}
             </p>
           )}
-          <div className="mt-3 flex items-center gap-3 sm:gap-4 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <a
               href={`https://explorer.solana.com/address/${agent.walletAddress}?cluster=${process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet"}`}
               target="_blank"
@@ -107,63 +107,34 @@ export default async function AgentDetailPage({
               </a>
             )}
             {agent.artStyle && (
-              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/50">
                 {agent.artStyle}
               </span>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { label: "Artworks", value: agent.totalArtworks },
-          { label: "Sales", value: agent.totalSales },
-          { label: "Purchases", value: agent.totalPurchases },
-          { label: "Comments", value: agent.totalComments },
-        ].map((stat) => (
-          <div key={stat.label} className="border border-border p-4 sm:p-6">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              {stat.label}
-            </p>
-            <p className="mt-2 font-mono text-2xl sm:text-3xl font-light">{stat.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Activity */}
-      <div className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-          Recent Activity
-        </h2>
-        {activity.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8">No activity yet</p>
-        ) : (
-          <div className="divide-y divide-border border-y border-border">
-            {activity.slice(0, 8).map((action) => (
-              <div
-                key={action.id}
-                className="flex items-center justify-between py-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm truncate">{action.description}</p>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                    {action.actionType.replace("_", " ")}
-                  </span>
-                </div>
-                <span className="shrink-0 font-mono text-[10px] text-muted-foreground ml-4">
-                  {formatRelativeTime(action.createdAt)}
+          {/* Inline stats */}
+          <div className="flex items-center gap-4 sm:gap-6 pt-1">
+            {[
+              { label: "works", value: agent.totalArtworks },
+              { label: "sales", value: agent.totalSales },
+              { label: "purchases", value: agent.totalPurchases },
+              { label: "comments", value: agent.totalComments },
+            ].map((stat) => (
+              <div key={stat.label} className="flex items-baseline gap-1.5">
+                <span className="font-mono text-sm">{stat.value}</span>
+                <span className="font-mono text-[10px] text-muted-foreground/50 uppercase tracking-wider">
+                  {stat.label}
                 </span>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Artworks */}
-      <div className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+      <div className="space-y-3">
+        <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           Artworks
         </h2>
         {artworks.length === 0 ? (
@@ -171,12 +142,12 @@ export default async function AgentDetailPage({
             <p className="text-sm text-muted-foreground">No artworks yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {artworks.map((artwork) => (
               <Link
                 key={artwork.id}
                 href={`/gallery/${artwork.id}`}
-                className="border border-border group"
+                className="group"
               >
                 <div className="aspect-square bg-muted overflow-hidden group-hover:opacity-80 transition-opacity">
                   {artwork.imageUrl && (
@@ -188,13 +159,13 @@ export default async function AgentDetailPage({
                     />
                   )}
                 </div>
-                <div className="p-3">
+                <div className="pt-2 pb-1">
                   <p className="text-sm truncate">{artwork.title}</p>
-                  <div className="mt-1 flex items-center justify-between">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className={`font-mono text-[10px] uppercase tracking-wider ${artwork.status === "failed" ? "text-red-400" : "text-muted-foreground/50"}`}>
                       {artwork.status}
                     </span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
+                    <span className="font-mono text-[10px] text-muted-foreground/50">
                       {formatRelativeTime(artwork.createdAt)}
                     </span>
                   </div>
@@ -204,6 +175,35 @@ export default async function AgentDetailPage({
           </div>
         )}
       </div>
+
+      {/* Activity */}
+      {activity.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Recent Activity
+          </h2>
+          <div className="divide-y divide-border border-y border-border">
+            {activity.slice(0, 6).map((action) => (
+              <div
+                key={action.id}
+                className="flex items-baseline justify-between gap-4 py-3"
+              >
+                <div className="min-w-0 flex items-baseline gap-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/40 shrink-0">
+                    {action.actionType.replace("_", " ")}
+                  </span>
+                  <span className="text-sm text-muted-foreground truncate">
+                    {action.description}
+                  </span>
+                </div>
+                <span className="shrink-0 font-mono text-[10px] text-muted-foreground/40">
+                  {formatRelativeTime(action.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

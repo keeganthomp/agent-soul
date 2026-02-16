@@ -2,16 +2,6 @@
 
 import { useActionState } from "react";
 import { adminLogin } from "@/actions/admin";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function AdminLoginPage() {
   const [state, formAction, pending] = useActionState(
@@ -25,44 +15,44 @@ export default function AdminLoginPage() {
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Admin Login</CardTitle>
-          <CardDescription>
-            Sign in to manage Agent Soul
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={formAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                required
-                autoComplete="username"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-            {state?.error && (
-              <p className="text-sm text-destructive">{state.error}</p>
-            )}
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
+      <form action={formAction} className="w-full max-w-[280px] space-y-6">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+          Admin
+        </p>
+
+        <div className="space-y-4">
+          <input
+            id="username"
+            name="username"
+            required
+            autoComplete="username"
+            placeholder="username"
+            className="w-full bg-transparent border-b border-border py-2 font-mono text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors"
+          />
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            placeholder="password"
+            className="w-full bg-transparent border-b border-border py-2 font-mono text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground transition-colors"
+          />
+        </div>
+
+        {state?.error && (
+          <p className="font-mono text-xs text-destructive">{state.error}</p>
+        )}
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full py-2 font-mono text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border hover:border-foreground transition-colors disabled:opacity-40"
+        >
+          {pending ? "..." : "Sign in"}
+        </button>
+      </form>
     </div>
   );
 }

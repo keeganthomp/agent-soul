@@ -1,8 +1,19 @@
 import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle as drizzleNeon } from "drizzle-orm/neon-http";
+import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { admins } from "./schema/admins";
 import { hashPassword } from "../lib/admin-auth";
 import { eq } from "drizzle-orm";
+
+function createDb() {
+  const url = process.env.DATABASE_URL!;
+  const isLocal = url.includes("localhost") || url.includes("127.0.0.1");
+  if (isLocal) {
+    return drizzlePostgres(postgres(url));
+  }
+  return drizzleNeon(neon(url));
+}
 
 async function main() {
   const username = process.argv[2];
@@ -18,9 +29,7 @@ async function main() {
     process.exit(1);
   }
 
-  const sql = neon(process.env.DATABASE_URL!);
-  const db = drizzle(sql);
-
+  const db = createDb();
   const passwordHash = hashPassword(password);
 
   const existing = await db
@@ -39,6 +48,8 @@ async function main() {
     await db.insert(admins).values({ username, passwordHash });
     console.log(`Created admin "${username}"`);
   }
+
+  process.exit(0);
 }
 
 main().catch((err) => {
