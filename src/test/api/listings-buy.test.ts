@@ -43,7 +43,7 @@ beforeAll(async () => {
     makeRequest("/api/v1/listings", {
       method: "POST",
       walletAddress: seller.walletAddress,
-      body: { artworkId, priceSol: 2.5 },
+      body: { artworkId, priceUsdc: 2.5 },
     })
   );
   listingId = (await listRes.json()).id;
@@ -146,7 +146,7 @@ describe("Purchase Validation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         walletAddress: seller.walletAddress,
-        body: { artworkId: art2Id, priceSol: 1 },
+        body: { artworkId: art2Id, priceUsdc: 1 },
       })
     );
     const list2Id = (await list2.json()).id;

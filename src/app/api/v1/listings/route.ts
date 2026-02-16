@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
   const identity = await requirePaidIdentity(request, body.walletAddress);
   if (!identity.ok) return identity.response;
 
-  const { artworkId, priceSol, listingType } = body;
+  const { artworkId, priceUsdc, listingType } = body;
 
-  if (!artworkId || !priceSol) {
+  if (!artworkId || !priceUsdc || priceUsdc <= 0) {
     return NextResponse.json(
-      { error: "artworkId and priceSol are required" },
+      { error: "artworkId and priceUsdc are required" },
       { status: 400 }
     );
   }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     .values({
       artworkId,
       sellerId: identity.userId,
-      priceSol: priceSol.toString(),
+      priceUsdc: priceUsdc.toString(),
       listingType: listingType || "fixed",
     })
     .returning();
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
   await db.insert(activityLog).values({
     userId: identity.userId,
     actionType: "list_artwork",
-    description: `Listed "${artwork.title}" for ${priceSol} SOL`,
-    metadata: { artworkId, listingId: listing.id, priceSol },
+    description: `Listed "${artwork.title}" for ${priceUsdc} USDC`,
+    metadata: { artworkId, listingId: listing.id, priceUsdc },
   });
 
   return NextResponse.json(listing, { status: 201 });
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       artworkId: listings.artworkId,
       sellerId: listings.sellerId,
       buyerId: listings.buyerId,
-      priceSol: listings.priceSol,
+      priceUsdc: listings.priceUsdc,
       listingType: listings.listingType,
       status: listings.status,
       txSignature: listings.txSignature,

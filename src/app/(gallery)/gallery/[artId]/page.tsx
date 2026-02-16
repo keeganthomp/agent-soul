@@ -42,7 +42,7 @@ export async function generateMetadata({
   };
 }
 import { getComments } from "@/actions/comment";
-import { getArtworkListing } from "@/actions/marketplace";
+import { getArtworkListing, getArtworkListings } from "@/actions/marketplace";
 import { formatRelativeTime, shortenAddress } from "@/lib/utils";
 import { ArtworkImage } from "@/components/art/artwork-image";
 import { ExternalLink, ChevronLeft } from "lucide-react";
@@ -54,10 +54,11 @@ export default async function ArtworkDetailPage({
   params: Promise<{ artId: string }>;
 }) {
   const { artId } = await params;
-  const [artwork, comments, listing] = await Promise.all([
+  const [artwork, comments, listing, allListings] = await Promise.all([
     getArtwork(artId),
     getComments(artId),
     getArtworkListing(artId),
+    getArtworkListings(artId),
   ]);
   if (!artwork) notFound();
 
@@ -108,7 +109,7 @@ export default async function ArtworkDetailPage({
                 For Sale
               </p>
               <p className="font-mono text-2xl font-light">
-                {listing.priceSol} SOL
+                {listing.priceUsdc} USDC
               </p>
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="font-mono text-[10px] uppercase tracking-wider">
@@ -126,7 +127,7 @@ export default async function ArtworkDetailPage({
                 Sold
               </p>
               <p className="font-mono text-2xl font-light">
-                {listing.priceSol} SOL
+                {listing.priceUsdc} USDC
               </p>
             </div>
           )}
@@ -148,6 +149,21 @@ export default async function ArtworkDetailPage({
               </p>
             )}
           </div>
+
+          {/* Owner */}
+          {artwork.ownerId !== artwork.creatorId && artwork.ownerName && (
+            <div className="space-y-2">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Owner
+              </p>
+              <Link
+                href={`/agents/${artwork.ownerId}`}
+                className="text-sm hover:text-foreground transition-colors text-muted-foreground"
+              >
+                {artwork.ownerName}
+              </Link>
+            </div>
+          )}
 
           {/* Details */}
           <div className="space-y-3">
@@ -189,6 +205,44 @@ export default async function ArtworkDetailPage({
           )}
         </div>
       </div>
+
+      {/* Sale History */}
+      {allListings.length > 0 && (
+        <div className="space-y-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            Sale History ({allListings.length})
+          </p>
+          <div className="divide-y divide-border border-y border-border">
+            {allListings.map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between py-3 text-xs">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className={`font-mono text-[10px] uppercase tracking-wider shrink-0 ${
+                      entry.status === "active"
+                        ? "text-foreground"
+                        : entry.status === "sold"
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/40"
+                    }`}
+                  >
+                    {entry.status}
+                  </span>
+                  <span className="font-mono">{entry.priceUsdc} USDC</span>
+                  <span className="text-muted-foreground truncate">
+                    {entry.sellerName || "Unknown"}
+                    {entry.status === "sold" && entry.buyerName && (
+                      <> &rarr; {entry.buyerName}</>
+                    )}
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-muted-foreground shrink-0 ml-3">
+                  {formatRelativeTime(entry.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Comments */}
       <div className="space-y-4">

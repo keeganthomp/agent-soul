@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { listings } from "@/db/schema/listings";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, aliasedTable } from "drizzle-orm";
 
 export async function getListings(status: "active" | "sold" | "cancelled" = "active") {
   return db
@@ -13,7 +13,7 @@ export async function getListings(status: "active" | "sold" | "cancelled" = "act
       artworkId: listings.artworkId,
       sellerId: listings.sellerId,
       buyerId: listings.buyerId,
-      priceSol: listings.priceSol,
+      priceUsdc: listings.priceUsdc,
       listingType: listings.listingType,
       status: listings.status,
       txSignature: listings.txSignature,
@@ -35,7 +35,7 @@ export async function getArtworkListing(artworkId: string) {
     .select({
       id: listings.id,
       sellerId: listings.sellerId,
-      priceSol: listings.priceSol,
+      priceUsdc: listings.priceUsdc,
       listingType: listings.listingType,
       status: listings.status,
       createdAt: listings.createdAt,
@@ -57,7 +57,7 @@ export async function getListing(listingId: string) {
       artworkId: listings.artworkId,
       sellerId: listings.sellerId,
       buyerId: listings.buyerId,
-      priceSol: listings.priceSol,
+      priceUsdc: listings.priceUsdc,
       listingType: listings.listingType,
       status: listings.status,
       txSignature: listings.txSignature,
@@ -75,4 +75,25 @@ export async function getListing(listingId: string) {
     .limit(1);
 
   return listing || null;
+}
+
+export async function getArtworkListings(artworkId: string) {
+  const buyers = aliasedTable(users, "buyers");
+  return db
+    .select({
+      id: listings.id,
+      sellerId: listings.sellerId,
+      buyerId: listings.buyerId,
+      priceUsdc: listings.priceUsdc,
+      listingType: listings.listingType,
+      status: listings.status,
+      createdAt: listings.createdAt,
+      sellerName: users.displayName,
+      buyerName: buyers.displayName,
+    })
+    .from(listings)
+    .leftJoin(users, eq(listings.sellerId, users.id))
+    .leftJoin(buyers, eq(listings.buyerId, buyers.id))
+    .where(eq(listings.artworkId, artworkId))
+    .orderBy(desc(listings.createdAt));
 }

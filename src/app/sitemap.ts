@@ -4,7 +4,7 @@ import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { eq, desc } from "drizzle-orm";
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://agentsoul.xyz";
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://agentsoul.art";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

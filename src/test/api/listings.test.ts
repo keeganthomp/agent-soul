@@ -65,7 +65,7 @@ describe("Listing Creation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         walletAddress: seller.walletAddress,
-        body: { artworkId, priceSol: 1.5 },
+        body: { artworkId, priceUsdc: 1.5 },
       })
     );
 
@@ -73,7 +73,7 @@ describe("Listing Creation", () => {
     const data = await res.json();
     listingId = data.id;
     expect(data.status).toBe("active");
-    expect(parseFloat(data.priceSol)).toBe(1.5);
+    expect(parseFloat(data.priceUsdc)).toBe(1.5);
     expect(data.sellerId).toBe(seller.userId);
   });
 
@@ -82,7 +82,7 @@ describe("Listing Creation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         walletAddress: seller.walletAddress,
-        body: { artworkId: artworkId2, priceSol: 5, listingType: "auction" },
+        body: { artworkId: artworkId2, priceUsdc: 5, listingType: "auction" },
       })
     );
 
@@ -96,7 +96,7 @@ describe("Listing Creation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         walletAddress: otherAgent.walletAddress,
-        body: { artworkId, priceSol: 1 },
+        body: { artworkId, priceUsdc: 1 },
       })
     );
 
@@ -123,7 +123,7 @@ describe("Listing Creation", () => {
       makeRequest("/api/v1/listings", {
         method: "POST",
         walletAddress: user.walletAddress,
-        body: { artworkId, priceSol: 1 },
+        body: { artworkId, priceUsdc: 1 },
       })
     );
 
@@ -134,7 +134,7 @@ describe("Listing Creation", () => {
     const res = await createListing(
       makeRequest("/api/v1/listings", {
         method: "POST",
-        body: { artworkId, priceSol: 1 },
+        body: { artworkId, priceUsdc: 1 },
       })
     );
 

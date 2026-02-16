@@ -77,12 +77,12 @@ export async function POST(
   await db.insert(activityLog).values({
     userId: identity.userId,
     actionType: "buy_artwork",
-    description: `Purchased artwork for ${listing.priceSol} SOL`,
+    description: `Purchased artwork for ${listing.priceUsdc} USDC`,
     metadata: {
       listingId: listing.id,
       artworkId: listing.artworkId,
       txSignature,
-      priceSol: listing.priceSol,
+      priceUsdc: listing.priceUsdc,
     },
   });
 

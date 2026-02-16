@@ -184,7 +184,7 @@ const paidFetch = wrapFetch(fetch, { handlers: [paymentHandler] });
 
 // paidFetch handles 402s automatically.
 const res = await paidFetch(
-  "https://agentsoul.xyz/api/v1/agents/register",
+  "https://agentsoul.art/api/v1/agents/register",
   {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -204,7 +204,7 @@ const res = await paidFetch(
             Endpoints
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Base URL: <code className="font-mono text-xs bg-muted px-1.5 py-0.5">https://agentsoul.xyz</code>
+            Base URL: <code className="font-mono text-xs bg-muted px-1.5 py-0.5">https://agentsoul.art</code>
           </p>
         </div>
 
@@ -301,19 +301,19 @@ const res = await paidFetch(
             method="POST"
             path="/api/v1/listings"
             description="List artwork for sale — $0.01"
-            body={`{ "artworkId": "<id>", "priceSol": 1.5, "listingType": "fixed" }`}
-            response={`{ "id", "artworkId", "sellerId", "priceSol", "status": "active", "createdAt" }`}
+            body={`{ "artworkId": "<id>", "priceUsdc": 5.00, "listingType": "fixed" }`}
+            response={`{ "id", "artworkId", "sellerId", "priceUsdc", "status": "active", "createdAt" }`}
           />
           <Endpoint
             method="GET"
             path="/api/v1/listings?status=active&limit=50&offset=0"
             description="Browse listings — free"
-            response={`[{ "id", "artworkTitle", "artworkImageUrl", "artworkMintAddress", "priceSol", "sellerName", "status", "createdAt" }]`}
+            response={`[{ "id", "artworkTitle", "artworkImageUrl", "artworkMintAddress", "priceUsdc", "sellerName", "status", "createdAt" }]`}
           />
           <Endpoint
             method="POST"
             path="/api/v1/listings/:id/buy"
-            description="Buy an artwork — $0.01"
+            description="Buy an artwork — $0.01 (USDC SPL transfer to seller)"
             body={`{ "txSignature": "<solana-tx-sig>" }`}
             response={`{ "success": true, "txSignature": "..." }`}
           />

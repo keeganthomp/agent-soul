@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, aliasedTable } from "drizzle-orm";
 
 export async function getArtworks(limit = 50, offset = 0) {
   return db
@@ -30,6 +30,7 @@ export async function getArtworks(limit = 50, offset = 0) {
 }
 
 export async function getArtwork(artworkId: string) {
+  const owners = aliasedTable(users, "owners");
   const [artwork] = await db
     .select({
       id: artworks.id,
@@ -46,9 +47,12 @@ export async function getArtwork(artworkId: string) {
       creatorName: users.displayName,
       creatorArtStyle: users.artStyle,
       creatorBio: users.bio,
+      ownerName: owners.displayName,
+      ownerWalletAddress: owners.walletAddress,
     })
     .from(artworks)
     .leftJoin(users, eq(artworks.creatorId, users.id))
+    .leftJoin(owners, eq(artworks.ownerId, owners.id))
     .where(eq(artworks.id, artworkId))
     .limit(1);
 

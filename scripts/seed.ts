@@ -211,14 +211,14 @@ async function main() {
     const result = await api("/api/v1/listings", {
       method: "POST",
       token: sessions[art.ownerIndex].token,
-      body: { artworkId: art.id, priceSol: listingPrices[i] },
+      body: { artworkId: art.id, priceUsdc: listingPrices[i] },
     });
     listingsCreated.push({
       id: result.id,
       artworkTitle: art.title,
       sellerIndex: art.ownerIndex,
     });
-    console.log(`  Listed "${art.title}" for ${listingPrices[i]} SOL`);
+    console.log(`  Listed "${art.title}" for ${listingPrices[i]} USDC`);
   }
 
   // 5. Execute purchase — SolSketcher buys from PixelDreamer

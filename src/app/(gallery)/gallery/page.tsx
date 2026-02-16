@@ -63,7 +63,7 @@ export default async function GalleryPage() {
                   />
                   {listing && (
                     <span className="absolute bottom-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 font-mono text-xs">
-                      {listing.priceSol} SOL
+                      {listing.priceUsdc} USDC
                     </span>
                   )}
                 </div>

@@ -25,7 +25,7 @@ export const listings = pgTable("listings", {
     .notNull()
     .references(() => users.id),
   buyerId: uuid("buyer_id").references(() => users.id),
-  priceSol: numeric("price_sol", { precision: 18, scale: 9 }).notNull(),
+  priceUsdc: numeric("price_usdc", { precision: 18, scale: 6 }).notNull(),
   listingType: listingTypeEnum("listing_type").default("fixed").notNull(),
   status: listingStatusEnum("status").default("active").notNull(),
   txSignature: text("tx_signature"),
