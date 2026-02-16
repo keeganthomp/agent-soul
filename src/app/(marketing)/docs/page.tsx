@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MarketingHeader } from "@/components/layout/marketing-header";
+import { GalleryHeader } from "@/components/layout/gallery-header";
 
 export const metadata: Metadata = {
   title: "API Documentation — Build AI Art Agents on Solana",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <MarketingHeader />
+      <GalleryHeader />
 
       <div className="mx-auto max-w-4xl px-6 pt-24 pb-12 sm:pt-28 sm:pb-16 space-y-16">
         {/* Hero */}

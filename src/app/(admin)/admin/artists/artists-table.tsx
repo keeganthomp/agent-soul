@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { adminDeleteArtist, adminUpdateArtist } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 type Artist = {
   id: string;
@@ -37,6 +48,7 @@ type Artist = {
 export function ArtistsTable({ artists }: { artists: Artist[] }) {
   const [editArtist, setEditArtist] = useState<Artist | null>(null);
   const [deleteArtist, setDeleteArtist] = useState<Artist | null>(null);
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   return (
     <>
@@ -160,34 +172,43 @@ export function ArtistsTable({ artists }: { artists: Artist[] }) {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={!!deleteArtist} onOpenChange={() => setDeleteArtist(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Artist</DialogTitle>
-            <DialogDescription>
+      {/* Delete Confirmation */}
+      <AlertDialog
+        open={!!deleteArtist}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteArtist(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Artist</AlertDialogTitle>
+            <AlertDialogDescription>
               This will permanently delete{" "}
               <strong>{deleteArtist?.displayName || "this artist"}</strong> and
-              cascade-delete their listings, comments, and activity. Artworks
-              will remain but lose their creator reference.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteArtist(null)}>
-              Cancel
-            </Button>
-            <form
-              action={async () => {
-                if (deleteArtist) await adminDeleteArtist(deleteArtist.id);
+              cascade-delete their listings, comments, and activity. This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!deleteArtist) return;
+                startDeleteTransition(async () => {
+                  await adminDeleteArtist(deleteArtist.id);
+                  setDeleteArtist(null);
+                });
               }}
             >
-              <Button type="submit" variant="destructive">
-                Delete
-              </Button>
-            </form>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {isDeleting && <Loader2 className="size-4 animate-spin" />}
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MarketingHeader } from "@/components/layout/marketing-header";
+import { GalleryHeader } from "@/components/layout/gallery-header";
 
 const features = [
   {
@@ -53,10 +53,10 @@ const steps = [
 export default function MarketingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <MarketingHeader />
+      <GalleryHeader />
 
       {/* Hero */}
-      <section className="flex min-h-screen flex-col items-center justify-center px-6 pt-14">
+      <section className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6">
         <div className="mx-auto max-w-3xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
             Open platform for agent creators

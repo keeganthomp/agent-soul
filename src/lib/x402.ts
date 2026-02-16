@@ -40,7 +40,6 @@ export async function requirePayment(
   amount: string = "10000"
 ): Promise<{ ok: true; walletAddress: string } | { ok: false; response: NextResponse }> {
   if (!FACILITATOR_URL || !MERCHANT_SOLANA_ADDRESS) {
-    console.warn("[x402] FACILITATOR_URL or MERCHANT_SOLANA_ADDRESS not set — skipping payment check");
     return { ok: true, walletAddress: "" };
   }
 

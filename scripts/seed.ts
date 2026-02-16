@@ -5,7 +5,8 @@
  * marketplace listings, purchases, and cross-agent comments.
  *
  * Usage:
- *   bun run seed
+ *   bun run seed          # uses x402 if configured
+ *   bun run seed --dev    # force dev mode (no x402 payments)
  *
  * Env vars (loaded from .env.local):
  *   SEED_WALLET_ONE_SECRET_KEY   — base58 secret key for agent 1 (PixelDreamer)
@@ -17,15 +18,28 @@
  */
 
 import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { Keypair, Connection, PublicKey } from "@solana/web3.js";
 import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
 import bs58 from "bs58";
-import { createLocalWallet } from "@faremeter/wallet-solana";
-import { lookupKnownSPLToken } from "@faremeter/info/solana";
-import { createPaymentHandler } from "@faremeter/payment-solana/exact";
-import { wrap as wrapFetch } from "@faremeter/fetch";
 
-config({ path: ".env.local" });
+// --dev flag forces dev mode (no x402 payments)
+const forceDevMode = process.argv.includes("--dev");
+
+// x402 is only needed when FACILITATOR_URL + MERCHANT_SOLANA_ADDRESS are set and not forced off
+const x402Enabled =
+  !forceDevMode &&
+  !!process.env.FACILITATOR_URL &&
+  !!process.env.MERCHANT_SOLANA_ADDRESS;
+
+let createLocalWallet: any, lookupKnownSPLToken: any, createPaymentHandler: any, wrapFetch: any;
+if (x402Enabled) {
+  ({ createLocalWallet } = await import("@faremeter/wallet-solana"));
+  ({ lookupKnownSPLToken } = await import("@faremeter/info/solana"));
+  ({ createPaymentHandler } = await import("@faremeter/payment-solana/exact"));
+  ({ wrap: wrapFetch } = await import("@faremeter/fetch"));
+}
 
 const BASE_URL = (
   process.env.SEED_BASE_URL || "http://localhost:3000"
@@ -126,10 +140,20 @@ const rpcUrl =
     : "https://api.devnet.solana.com");
 const connection = new Connection(rpcUrl, "confirmed");
 
-const usdcInfo = lookupKnownSPLToken(solanaNetwork, "USDC");
-if (!usdcInfo) throw new Error(`USDC not found for network ${solanaNetwork}`);
-const USDC_MINT = new PublicKey(usdcInfo.address);
 const USDC_DECIMALS = 6;
+let USDC_MINT: PublicKey;
+if (x402Enabled) {
+  const usdcInfo = lookupKnownSPLToken(solanaNetwork, "USDC");
+  if (!usdcInfo) throw new Error(`USDC not found for network ${solanaNetwork}`);
+  USDC_MINT = new PublicKey(usdcInfo.address);
+} else {
+  // Known USDC mints — only needed for balance display in dev mode
+  USDC_MINT = new PublicKey(
+    solanaNetwork === "mainnet-beta"
+      ? "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+      : "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+  );
+}
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -151,31 +175,32 @@ async function getWalletBalances(pubkey: PublicKey) {
   };
 }
 
-async function createPaidFetchForAgent(agentKeypair: Keypair) {
-  const wallet = await createLocalWallet(solanaNetwork, agentKeypair);
-  const paymentHandler = createPaymentHandler(
-    wallet,
-    USDC_MINT,
-    connection
-  );
-  return wrapFetch(fetch, { handlers: [paymentHandler] });
+async function createFetchForAgent(agentKeypair: Keypair) {
+  if (x402Enabled) {
+    const wallet = await createLocalWallet(solanaNetwork, agentKeypair);
+    const paymentHandler = createPaymentHandler(wallet, USDC_MINT, connection);
+    return wrapFetch(fetch, { handlers: [paymentHandler] });
+  }
+  return fetch;
 }
 
-type PaidFetchFn = Awaited<ReturnType<typeof createPaidFetchForAgent>>;
+type FetchFn = typeof fetch;
 
 async function api(
-  paidFetch: PaidFetchFn,
+  fetchFn: FetchFn,
   path: string,
   options: { method?: string; body?: unknown; okStatuses?: number[] } = {}
 ) {
   const { method = "GET", body, okStatuses } = options;
-  const res = await paidFetch(`${BASE_URL}${path}`, {
+
+  const res = await fetchFn(`${BASE_URL}${path}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
 
   const data = await res.json();
+
   if (!res.ok && !okStatuses?.includes(res.status)) {
     throw new Error(
       `${method} ${path} failed (${res.status}): ${JSON.stringify(data)}`
@@ -193,10 +218,12 @@ async function main() {
   // 1. Load agent keypairs from env
   console.log("── Loading agent wallets ──\n");
 
+  console.log(`   x402: ${x402Enabled ? "enabled (paid requests)" : "disabled (dev mode)"}\n`);
+
   const agents: {
     keypair: Keypair;
     walletAddress: string;
-    paidFetch: PaidFetchFn;
+    fetchFn: FetchFn;
     def: (typeof agentDefs)[0];
   }[] = [];
 
@@ -218,26 +245,28 @@ async function main() {
       `    USDC:   $${balances.usdc} USDC`
     );
 
-    if (balances.usdc < 0.5) {
-      throw new Error(
-        `${def.name} has insufficient USDC ($${balances.usdc}). Need at least $0.50.`
-      );
-    }
-    if (balances.sol < 0.001) {
-      throw new Error(
-        `${def.name} has insufficient SOL (${balances.sol}). Need at least 0.001 SOL.`
-      );
+    if (x402Enabled) {
+      if (balances.usdc < 0.5) {
+        throw new Error(
+          `${def.name} has insufficient USDC ($${balances.usdc}). Need at least $0.50.`
+        );
+      }
+      if (balances.sol < 0.001) {
+        throw new Error(
+          `${def.name} has insufficient SOL (${balances.sol}). Need at least 0.001 SOL.`
+        );
+      }
     }
 
-    const paidFetch = await createPaidFetchForAgent(keypair);
-    agents.push({ keypair, walletAddress, paidFetch, def });
+    const fetchFn = await createFetchForAgent(keypair);
+    agents.push({ keypair, walletAddress, fetchFn, def });
   }
 
   // 2. Register agents
   console.log("\n── Registering agents ──\n");
 
   for (const agent of agents) {
-    const reg = await api(agent.paidFetch, "/api/v1/agents/register", {
+    const reg = await api(agent.fetchFn, "/api/v1/agents/register", {
       method: "POST",
       okStatuses: [409],
       body: {
@@ -300,7 +329,7 @@ async function main() {
       let genResult: { imageUrl: string };
       for (let attempt = 0; ; attempt++) {
         const res = await api(
-          agent.paidFetch,
+          agent.fetchFn,
           "/api/v1/artworks/generate-image",
           {
             method: "POST",
@@ -320,7 +349,7 @@ async function main() {
       console.log(`     Image: ${genResult.imageUrl.slice(0, 60)}...`);
 
       // Create draft
-      const draft = await api(agent.paidFetch, "/api/v1/artworks", {
+      const draft = await api(agent.fetchFn, "/api/v1/artworks", {
         method: "POST",
         body: {
           walletAddress: agent.walletAddress,
@@ -331,7 +360,7 @@ async function main() {
       });
 
       // Submit (mint)
-      await api(agent.paidFetch, `/api/v1/artworks/${draft.id}/submit`, {
+      await api(agent.fetchFn, `/api/v1/artworks/${draft.id}/submit`, {
         method: "POST",
         body: { walletAddress: agent.walletAddress },
       });
@@ -364,7 +393,7 @@ async function main() {
   for (const l of listingsToCreate) {
     const art = allArtworks[l.artIndex];
     const seller = agents[art.agentIndex];
-    const result = await api(seller.paidFetch, "/api/v1/listings", {
+    const result = await api(seller.fetchFn, "/api/v1/listings", {
       method: "POST",
       body: {
         walletAddress: seller.walletAddress,
@@ -389,7 +418,7 @@ async function main() {
   // SolSketcher buys Fractal Dreams from AbstractMind
   const purchase1 = listings[1];
   const buyer1 = agents[2]; // SolSketcher
-  await api(buyer1.paidFetch, `/api/v1/listings/${purchase1.id}/buy`, {
+  await api(buyer1.fetchFn, `/api/v1/listings/${purchase1.id}/buy`, {
     method: "POST",
     body: {
       walletAddress: buyer1.walletAddress,
@@ -403,7 +432,7 @@ async function main() {
   // PixelDreamer buys Validator Node from SolSketcher
   const purchase2 = listings[3];
   const buyer2 = agents[0]; // PixelDreamer
-  await api(buyer2.paidFetch, `/api/v1/listings/${purchase2.id}/buy`, {
+  await api(buyer2.fetchFn, `/api/v1/listings/${purchase2.id}/buy`, {
     method: "POST",
     body: {
       walletAddress: buyer2.walletAddress,
@@ -466,7 +495,7 @@ async function main() {
     const art = allArtworks[c.artIndex];
     const commenter = agents[c.commenterIndex];
     await api(
-      commenter.paidFetch,
+      commenter.fetchFn,
       `/api/v1/artworks/${art.id}/comments`,
       {
         method: "POST",

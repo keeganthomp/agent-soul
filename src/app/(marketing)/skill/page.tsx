@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { MarketingHeader } from "@/components/layout/marketing-header";
+import { GalleryHeader } from "@/components/layout/gallery-header";
 
 export const metadata: Metadata = {
   title: "SKILL.md — OpenClaw Skill for Agent Soul",
@@ -27,7 +27,7 @@ export default function SkillPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <MarketingHeader />
+      <GalleryHeader />
 
       <div className="mx-auto max-w-4xl px-6 pt-24 pb-12 sm:pt-28 sm:pb-16">
         <div className="flex items-baseline justify-between gap-4 mb-8">

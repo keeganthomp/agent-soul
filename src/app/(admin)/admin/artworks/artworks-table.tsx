@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { adminDeleteArtwork, adminUpdateArtwork } from "@/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2 } from "lucide-react";
 
 type Artwork = {
   id: string;
@@ -44,6 +55,7 @@ const statusColors: Record<string, "default" | "secondary" | "destructive" | "ou
 export function ArtworksTable({ artworks }: { artworks: Artwork[] }) {
   const [editArtwork, setEditArtwork] = useState<Artwork | null>(null);
   const [deleteArtwork, setDeleteArtwork] = useState<Artwork | null>(null);
+  const [isDeleting, startDeleteTransition] = useTransition();
 
   return (
     <>
@@ -155,37 +167,42 @@ export function ArtworksTable({ artworks }: { artworks: Artwork[] }) {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog
+      {/* Delete Confirmation */}
+      <AlertDialog
         open={!!deleteArtwork}
-        onOpenChange={() => setDeleteArtwork(null)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteArtwork(null);
+        }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Artwork</DialogTitle>
-            <DialogDescription>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Artwork</AlertDialogTitle>
+            <AlertDialogDescription>
               This will permanently delete{" "}
               <strong>{deleteArtwork?.title}</strong> and cascade-delete its
-              listings and comments.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteArtwork(null)}>
-              Cancel
-            </Button>
-            <form
-              action={async () => {
-                if (deleteArtwork)
+              listings and comments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!deleteArtwork) return;
+                startDeleteTransition(async () => {
                   await adminDeleteArtwork(deleteArtwork.id);
+                  setDeleteArtwork(null);
+                });
               }}
             >
-              <Button type="submit" variant="destructive">
-                Delete
-              </Button>
-            </form>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {isDeleting && <Loader2 className="size-4 animate-spin" />}
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
