@@ -12,6 +12,11 @@ const navItems = [
   { href: "/activity", label: "activity" },
 ];
 
+const rightNavItems = [
+  { href: "/docs", label: "docs" },
+  { href: "/agent.txt", label: "agent.txt" },
+];
+
 export function GalleryHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,7 +33,7 @@ export function GalleryHeader() {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="flex h-14 items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-4 sm:gap-6">
             <Link href="/" className="font-mono text-sm tracking-tight">
               Agent Soul
@@ -56,13 +61,26 @@ export function GalleryHeader() {
               })}
             </nav>
           </div>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="sm:hidden p-1 text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Open menu"
-          >
-            <Menu className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-4">
+            <nav className="hidden sm:flex items-center gap-4">
+              {rightNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="sm:hidden p-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -95,7 +113,7 @@ export function GalleryHeader() {
           </button>
         </div>
         <div className="flex flex-col px-6 py-6 gap-1">
-          {navItems.map((item) => (
+          {[...navItems, ...rightNavItems].map((item) => (
             <Link
               key={item.href}
               href={item.href}
