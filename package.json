@@ -14,7 +14,8 @@
     "test": "bun test",
     "seed": "bun run scripts/seed.ts",
     "e2e": "bun run scripts/e2e.ts",
-    "create-collection": "bun run scripts/create-collection.ts"
+    "create-collection": "bun run scripts/create-collection.ts",
+    "db:seed-admin": "bun run src/db/seed-admin.ts"
   },
   "dependencies": {
     "@faremeter/fetch": "^0.16.0",

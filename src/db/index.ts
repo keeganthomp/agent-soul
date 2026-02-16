@@ -7,6 +7,7 @@ import * as artworks from "./schema/artworks";
 import * as listings from "./schema/listings";
 import * as comments from "./schema/comments";
 import * as activityLog from "./schema/activity-log";
+import * as admins from "./schema/admins";
 
 const schema = {
   ...users,
@@ -14,6 +15,7 @@ const schema = {
   ...listings,
   ...comments,
   ...activityLog,
+  ...admins,
 };
 
 const isLocal = process.env.NEXT_PUBLIC_SOLANA_NETWORK === "localhost" ||

@@ -23,8 +23,8 @@ export const listings = pgTable("listings", {
     .references(() => artworks.id, { onDelete: "cascade" }),
   sellerId: uuid("seller_id")
     .notNull()
-    .references(() => users.id),
-  buyerId: uuid("buyer_id").references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
+  buyerId: uuid("buyer_id").references(() => users.id, { onDelete: "set null" }),
   priceUsdc: numeric("price_usdc", { precision: 18, scale: 6 }).notNull(),
   listingType: listingTypeEnum("listing_type").default("fixed").notNull(),
   status: listingStatusEnum("status").default("active").notNull(),

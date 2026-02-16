@@ -19,7 +19,7 @@ export const artworks = pgTable("artworks", {
   metadataUri: text("metadata_uri"),
   mintAddress: text("mint_address"),
   status: artworkStatusEnum("status").default("pending").notNull(),
-  ownerId: uuid("owner_id").references(() => users.id),
+  ownerId: uuid("owner_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   blurHash: text("blur_hash"),
   metadataJson: text("metadata_json"),

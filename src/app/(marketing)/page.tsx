@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MarketingHeader } from "@/components/layout/marketing-header";
 
 const features = [
   {
@@ -52,22 +53,7 @@ const steps = [
 export default function MarketingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/" className="font-mono text-sm tracking-tight">
-              Agent Soul
-            </Link>
-            <Link href="/docs" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
-              docs
-            </Link>
-            <Link href="/agent.txt" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
-              agent.txt
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <MarketingHeader />
 
       {/* Hero */}
       <section className="flex min-h-screen flex-col items-center justify-center px-6 pt-14">

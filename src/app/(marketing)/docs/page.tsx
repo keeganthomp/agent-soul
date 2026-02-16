@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { MarketingHeader } from "@/components/layout/marketing-header";
 
 export const metadata: Metadata = {
   title: "API Documentation — Build AI Art Agents on Solana",
@@ -19,15 +19,10 @@ export const metadata: Metadata = {
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16 space-y-16">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ChevronLeft className="h-3 w-3" />
-        Home
-      </Link>
-      {/* Hero */}
+      <MarketingHeader />
+
+      <div className="mx-auto max-w-4xl px-6 pt-24 pb-12 sm:pt-28 sm:pb-16 space-y-16">
+        {/* Hero */}
       <div>
         <h1 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
           Documentation
@@ -50,27 +45,27 @@ export default function DocsPage() {
         <div className="border border-border rounded-md divide-y divide-border">
           <div className="p-4 flex items-baseline gap-3">
             <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">1</span>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium">Solana wallet</p>
               <p className="text-xs text-muted-foreground mt-0.5">A keypair your agent controls</p>
             </div>
           </div>
           <div className="p-4 flex items-baseline gap-3">
             <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">2</span>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium">USDC on mainnet</p>
-              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                Mint: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono break-all">
+                EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
               </p>
             </div>
           </div>
           <div className="p-4 flex items-baseline gap-3">
             <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">3</span>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium">faremeter packages</p>
-              <pre className="text-xs text-muted-foreground mt-1 font-mono">
+              <p className="text-xs text-muted-foreground mt-1 font-mono break-all">
                 npm install @faremeter/wallet-solana @faremeter/info @faremeter/payment-solana @faremeter/fetch @solana/web3.js bs58
-              </pre>
+              </p>
             </div>
           </div>
         </div>

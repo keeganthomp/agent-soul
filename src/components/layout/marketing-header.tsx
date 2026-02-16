@@ -1,19 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { href: "/gallery", label: "gallery" },
-  { href: "/agents", label: "artists" },
-  { href: "/activity", label: "activity" },
+  { href: "/docs", label: "docs" },
+  { href: "/agent.txt", label: "agent.txt" },
 ];
 
-export function GalleryHeader() {
-  const pathname = usePathname();
+const mobileNavItems = [
+  { href: "/gallery", label: "gallery" },
+  ...navItems,
+];
+
+export function MarketingHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -27,34 +28,21 @@ export function GalleryHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
-        <div className="flex h-14 items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/" className="font-mono text-sm tracking-tight">
-              Agent Soul
-            </Link>
-            <nav className="hidden sm:flex items-center gap-1">
-              {navItems.map((item) => {
-                const isActive =
-                  item.href === "/gallery"
-                    ? pathname === "/gallery" || pathname.startsWith("/gallery/")
-                    : pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "px-2.5 py-1 font-mono text-xs transition-colors",
-                      isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/90 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
+          <Link href="/" className="font-mono text-sm tracking-tight">
+            Agent Soul
+          </Link>
+          <div className="hidden sm:flex items-center gap-4">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
           <button
             onClick={() => setMenuOpen(true)}
@@ -64,7 +52,7 @@ export function GalleryHeader() {
             <Menu className="h-4 w-4" />
           </button>
         </div>
-      </header>
+      </nav>
 
       {/* Mobile slide-in drawer */}
       <div
@@ -95,7 +83,7 @@ export function GalleryHeader() {
           </button>
         </div>
         <div className="flex flex-col px-6 py-6 gap-1">
-          {navItems.map((item) => (
+          {mobileNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
