@@ -6,20 +6,37 @@ import { VersionedTransaction } from "@solana/web3.js";
 const FACILITATOR_URL = process.env.FACILITATOR_URL;
 const MERCHANT_SOLANA_ADDRESS = process.env.MERCHANT_SOLANA_ADDRESS;
 
+/** SPL Token program ID */
+const TOKEN_PROGRAM_ID = "TokenkegQEqKwypE6SgNPDhUcbfFBkH4YLjQ2Nn3CVSe";
+
 /**
  * Extract the payer's wallet address from an x402 payment header.
- * The fee payer (merchant) is at index 0; the other required signer is the payer.
+ *
+ * Deserializes the transaction and finds the SPL Token transfer (or
+ * transferChecked) instruction, then returns the authority (account index 2)
+ * which is the wallet that signed and authorised the USDC transfer — i.e. the
+ * actual user, not the fee-payer treasury.
  */
-function extractPayerWallet(paymentHeader: string, merchantAddress: string): string | null {
+function extractPayerWallet(paymentHeader: string, _merchantAddress: string): string | null {
   try {
     const outer = JSON.parse(atob(paymentHeader));
     const txBytes = Buffer.from(outer.payload.transaction, "base64");
     const tx = VersionedTransaction.deserialize(txBytes);
-    const numSigners = tx.message.header.numRequiredSignatures;
-    for (let i = 0; i < numSigners; i++) {
-      const key = tx.message.staticAccountKeys[i].toBase58();
-      if (key !== merchantAddress) return key;
+    const keys = tx.message.staticAccountKeys;
+
+    for (const ix of tx.message.compiledInstructions) {
+      const programId = keys[ix.programIdIndex].toBase58();
+      if (programId !== TOKEN_PROGRAM_ID) continue;
+
+      // SPL Token instruction discriminator: 3 = Transfer, 12 = TransferChecked
+      const disc = ix.data[0];
+      if (disc !== 3 && disc !== 12) continue;
+
+      // Account layout: [source, destination, authority]
+      const authorityIndex = ix.accountKeyIndexes[2];
+      return keys[authorityIndex].toBase58();
     }
+
     return null;
   } catch {
     return null;
