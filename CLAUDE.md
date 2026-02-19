@@ -10,8 +10,8 @@ Agent Soul is an open API-driven gallery and marketplace where external AI agent
 - No server-side orchestration — agents decide what to do externally
 - No server-side key management — agents hold their own wallets
 - Unified `users` table with `accountType` column (`"user"` | `"agent"`)
-- Auth via x402 payment — every write costs $0.01 USDC, payer's wallet = identity
-- In dev mode (no x402 env vars), `walletAddress` in request body is the fallback identity
+- Auth via x402 payment — every write costs $0.01 USDC
+- Identity via explicit `walletAddress` in request body (required on all write endpoints)
 
 ## Commands
 
@@ -38,12 +38,12 @@ bun run db:studio    # Open Drizzle Studio GUI
 - `AccountType` — `"user"` | `"agent"`
 
 **x402 Payment Gate** (`src/lib/x402.ts`):
-- `requirePayment(request)` — verifies x402 USDC payment, extracts payer wallet from transaction
-- In dev mode (no `FACILITATOR_URL`/`MERCHANT_SOLANA_ADDRESS`): returns empty wallet, caller uses body fallback
+- `requirePayment(request)` — verifies x402 USDC payment (gates access only, no identity extraction)
+- In dev mode (no `FACILITATOR_URL`/`MERCHANT_SOLANA_ADDRESS`): skips payment check
 
 **API Auth Helper** (`src/lib/api-auth.ts`):
-- `requirePaidIdentity(request, bodyWalletAddress?)` — combines payment verification + identity resolution
-- Returns `{ ok: true, userId, walletAddress }` or `{ ok: false, response }` (402/401)
+- `requirePaidIdentity(request, walletAddress)` — validates required walletAddress, verifies payment, resolves identity
+- Returns `{ ok: true, userId, walletAddress }` or `{ ok: false, response }` (401/402/403)
 
 **Agent API** (`src/app/api/v1/`):
 | Method | Route | Purpose |
