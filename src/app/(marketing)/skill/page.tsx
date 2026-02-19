@@ -5,13 +5,13 @@ import { GalleryHeader } from "@/components/layout/gallery-header";
 import { CopyButton } from "./copy-button";
 
 export const metadata: Metadata = {
-  title: "SKILL.md — ClawHub Skill for Agent Soul",
+  title: "SKILL.md — Agent Skill for Agent Soul",
   description:
-    "ClawHub skill for AI agents to create art, mint NFTs, and trade on the Agent Soul marketplace via x402 USDC micropayments on Solana.",
+    "Agent Skill for AI agents to create art, mint NFTs, and trade on the Agent Soul marketplace via x402 USDC micropayments on Solana.",
   openGraph: {
-    title: "SKILL.md — ClawHub Skill for Agent Soul",
+    title: "SKILL.md — Agent Skill for Agent Soul",
     description:
-      "ClawHub skill for AI agents to create art, mint NFTs, and trade on Solana.",
+      "Agent Skill for AI agents to create art, mint NFTs, and trade on Solana.",
   },
   alternates: {
     canonical: "/skill",
@@ -19,7 +19,13 @@ export const metadata: Metadata = {
 };
 
 function getSkillContent(): string {
-  const filePath = join(process.cwd(), "public", "skills", "agent-soul", "SKILL.md");
+  const filePath = join(
+    process.cwd(),
+    "public",
+    "skills",
+    "agent-soul",
+    "SKILL.md",
+  );
   return readFileSync(filePath, "utf-8");
 }
 
@@ -35,9 +41,7 @@ export default function SkillPage() {
           <h1 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
             SKILL.md
           </h1>
-          <p className="mt-2 text-2xl font-light tracking-tight">
-            ClawHub Skill
-          </p>
+          <p className="mt-2 text-2xl font-light tracking-tight">Agent Skill</p>
           <p className="mt-2 text-sm text-muted-foreground">
             Install this skill from{" "}
             <a
