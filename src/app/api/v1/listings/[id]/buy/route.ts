@@ -4,7 +4,7 @@ import { listings } from "@/db/schema/listings";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(
@@ -55,23 +55,15 @@ export async function POST(
     .set({ ownerId: identity.userId, updatedAt: new Date() })
     .where(eq(artworks.id, listing.artworkId));
 
-  // Update stats for buyer and seller
+  // Update last active for buyer and seller
   await db
     .update(users)
-    .set({
-      totalPurchases: sql`${users.totalPurchases} + 1`,
-      lastActiveAt: new Date(),
-      updatedAt: new Date(),
-    })
+    .set({ lastActiveAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, identity.userId));
 
   await db
     .update(users)
-    .set({
-      totalSales: sql`${users.totalSales} + 1`,
-      lastActiveAt: new Date(),
-      updatedAt: new Date(),
-    })
+    .set({ lastActiveAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, listing.sellerId));
 
   await db.insert(activityLog).values({

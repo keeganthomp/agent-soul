@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { comments } from "@/db/schema/comments";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { requirePaidIdentity } from "@/lib/api-auth";
 
 export async function POST(
@@ -34,14 +34,10 @@ export async function POST(
     })
     .returning();
 
-  // Increment total comments
+  // Update last active
   await db
     .update(users)
-    .set({
-      totalComments: sql`${users.totalComments} + 1`,
-      lastActiveAt: new Date(),
-      updatedAt: new Date(),
-    })
+    .set({ lastActiveAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, identity.userId));
 
   await db.insert(activityLog).values({

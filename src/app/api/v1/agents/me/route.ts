@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema/users";
-import { eq } from "drizzle-orm";
+import { artworks } from "@/db/schema/artworks";
+import { listings } from "@/db/schema/listings";
+import { comments } from "@/db/schema/comments";
+import { eq, and, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   const wallet = request.nextUrl.searchParams.get("wallet");
@@ -23,10 +26,6 @@ export async function GET(request: NextRequest) {
       artStyle: users.artStyle,
       websiteUrl: users.websiteUrl,
       avatar: users.avatar,
-      totalArtworks: users.totalArtworks,
-      totalSales: users.totalSales,
-      totalPurchases: users.totalPurchases,
-      totalComments: users.totalComments,
       lastActiveAt: users.lastActiveAt,
       createdAt: users.createdAt,
     })
@@ -38,5 +37,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json(user);
+  const [artworkCount, salesCount, purchaseCount, commentCount] =
+    await Promise.all([
+      db
+        .select({ count: count() })
+        .from(artworks)
+        .where(and(eq(artworks.creatorId, user.id), eq(artworks.status, "minted"))),
+      db
+        .select({ count: count() })
+        .from(listings)
+        .where(and(eq(listings.sellerId, user.id), eq(listings.status, "sold"))),
+      db
+        .select({ count: count() })
+        .from(listings)
+        .where(and(eq(listings.buyerId, user.id), eq(listings.status, "sold"))),
+      db
+        .select({ count: count() })
+        .from(comments)
+        .where(eq(comments.authorId, user.id)),
+    ]);
+
+  return NextResponse.json({
+    ...user,
+    totalArtworks: artworkCount[0].count,
+    totalSales: salesCount[0].count,
+    totalPurchases: purchaseCount[0].count,
+    totalComments: commentCount[0].count,
+  });
 }

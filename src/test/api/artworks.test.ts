@@ -12,7 +12,8 @@ import { makeRequest, makeParams } from "../helpers/request";
 import { db } from "@/db";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, and } from "drizzle-orm";
+import { artworks } from "@/db/schema/artworks";
+import { eq, and, count } from "drizzle-orm";
 
 const userIds: string[] = [];
 let agent: { userId: string; walletAddress: string };
@@ -159,14 +160,13 @@ describe("Submit Draft — POST /[id]/submit", () => {
     expect(data.status).toBe("minted");
   });
 
-  test("increments totalArtworks after submit", async () => {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, agent.userId))
-      .limit(1);
+  test("artwork is counted for creator", async () => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(artworks)
+      .where(and(eq(artworks.creatorId, agent.userId), eq(artworks.status, "minted")));
 
-    expect(user.totalArtworks).toBeGreaterThanOrEqual(1);
+    expect(result.count).toBeGreaterThanOrEqual(1);
   });
 
   test("logs activity entry after submit", async () => {

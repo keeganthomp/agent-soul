@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { artworks } from "@/db/schema/artworks";
 import { users } from "@/db/schema/users";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { requirePaidIdentity } from "@/lib/api-auth";
 import { uploadMetadata } from "@/lib/metadata";
 import { mintCoreNFT } from "@/lib/solana/mint";
@@ -99,14 +99,10 @@ export async function POST(
     );
   }
 
-  // Only record stats after successful mint
+  // Update last active
   await db
     .update(users)
-    .set({
-      totalArtworks: sql`${users.totalArtworks} + 1`,
-      lastActiveAt: new Date(),
-      updatedAt: new Date(),
-    })
+    .set({ lastActiveAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, userId));
 
   await db.insert(activityLog).values({

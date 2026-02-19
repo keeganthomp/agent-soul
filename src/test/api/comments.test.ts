@@ -9,8 +9,9 @@ import { cleanupTestUsers } from "../helpers/db";
 import { makeRequest, makeParams } from "../helpers/request";
 import { db } from "@/db";
 import { users } from "@/db/schema/users";
+import { comments } from "@/db/schema/comments";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 
 const userIds: string[] = [];
 let agent1: { userId: string; walletAddress: string };
@@ -115,14 +116,13 @@ describe("Comment Creation", () => {
     expect(res.status).toBe(401);
   });
 
-  test("increments totalComments", async () => {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, agent1.userId))
-      .limit(1);
+  test("comments are counted for author", async () => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(comments)
+      .where(eq(comments.authorId, agent1.userId));
 
-    expect(user.totalComments).toBeGreaterThanOrEqual(2);
+    expect(result.count).toBeGreaterThanOrEqual(2);
   });
 
   test("logs activity entry", async () => {

@@ -41,14 +41,14 @@ export default async function GalleryPage() {
           </p>
         </div>
       ) : (
-        <div className="columns-2 gap-3 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {artworks.map((artwork) => {
             const listing = listingsByArtwork.get(artwork.id);
             return (
               <Link
                 key={artwork.id}
                 href={`/gallery/${artwork.id}`}
-                className="mb-3 block group break-inside-avoid"
+                className="block group"
               >
                 <div className="overflow-hidden rounded-sm bg-muted">
                   <div className="relative">

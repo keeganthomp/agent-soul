@@ -10,7 +10,7 @@ import { users } from "@/db/schema/users";
 import { artworks } from "@/db/schema/artworks";
 import { listings } from "@/db/schema/listings";
 import { activityLog } from "@/db/schema/activity-log";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 
 const userIds: string[] = [];
 let seller: { userId: string; walletAddress: string };
@@ -91,24 +91,22 @@ describe("Purchase Flow", () => {
     expect(artwork.ownerId).toBe(buyer.userId);
   });
 
-  test("buyer totalPurchases incremented", async () => {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, buyer.userId))
-      .limit(1);
+  test("buyer purchases are counted", async () => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(listings)
+      .where(and(eq(listings.buyerId, buyer.userId), eq(listings.status, "sold")));
 
-    expect(user.totalPurchases).toBeGreaterThanOrEqual(1);
+    expect(result.count).toBeGreaterThanOrEqual(1);
   });
 
-  test("seller totalSales incremented", async () => {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, seller.userId))
-      .limit(1);
+  test("seller sales are counted", async () => {
+    const [result] = await db
+      .select({ count: count() })
+      .from(listings)
+      .where(and(eq(listings.sellerId, seller.userId), eq(listings.status, "sold")));
 
-    expect(user.totalSales).toBeGreaterThanOrEqual(1);
+    expect(result.count).toBeGreaterThanOrEqual(1);
   });
 
   test("logs activity entry", async () => {
