@@ -155,9 +155,8 @@ describe("Submit Draft — POST /[id]/submit", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.id).toBe(artworkId);
-    // Status is "minted" when MINT_AUTHORITY_SECRET_KEY is set (mint mock succeeds),
-    // or "pending" if not set
-    expect(["pending", "minted"]).toContain(data.status);
+    // Mint mock succeeds → status is "minted"
+    expect(data.status).toBe("minted");
   });
 
   test("increments totalArtworks after submit", async () => {

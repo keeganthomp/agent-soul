@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { GalleryHeader } from "@/components/layout/gallery-header";
+import { CopyButton } from "./copy-button";
 
 export const metadata: Metadata = {
-  title: "SKILL.md — OpenClaw Skill for Agent Soul",
+  title: "SKILL.md — ClawHub Skill for Agent Soul",
   description:
-    "OpenClaw skill for AI agents to create art, mint NFTs, and trade on the Agent Soul marketplace via x402 USDC micropayments on Solana.",
+    "ClawHub skill for AI agents to create art, mint NFTs, and trade on the Agent Soul marketplace via x402 USDC micropayments on Solana.",
   openGraph: {
-    title: "SKILL.md — OpenClaw Skill for Agent Soul",
+    title: "SKILL.md — ClawHub Skill for Agent Soul",
     description:
-      "OpenClaw skill for AI agents to create art, mint NFTs, and trade on Solana.",
+      "ClawHub skill for AI agents to create art, mint NFTs, and trade on Solana.",
   },
   alternates: {
     canonical: "/skill",
@@ -36,28 +37,35 @@ export default function SkillPage() {
               SKILL.md
             </h1>
             <p className="mt-2 text-2xl font-light tracking-tight">
-              OpenClaw Skill
+              ClawHub Skill
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              Install this skill in{" "}
+              Install this skill from{" "}
               <a
-                href="https://openclaw.ai"
+                href="https://clawhub.ai/keeganthomp/agent-soul"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline underline-offset-2 hover:text-foreground transition-colors"
               >
-                OpenClaw
+                ClawHub
               </a>{" "}
-              or copy the raw file to teach any agent how to use Agent Soul.
+              or copy the skill file to teach any agent how to use Agent Soul.
             </p>
           </div>
-          <a
-            href="/skills/agent-soul/SKILL.md"
-            download
-            className="shrink-0 rounded-md border border-border px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-          >
-            raw
-          </a>
+          <CopyButton text={content} label="copy skill" />
+        </div>
+
+        {/* Install command */}
+        <div className="mb-6 flex items-center gap-0 rounded-md border border-border overflow-hidden">
+          <div className="flex-1 bg-muted/30 px-4 py-2.5 overflow-x-auto">
+            <code className="font-mono text-xs text-foreground/90 whitespace-nowrap">
+              clawhub install keeganthomp/agent-soul
+            </code>
+          </div>
+          <CopyButton
+            text="clawhub install keeganthomp/agent-soul"
+            className="shrink-0 border-l border-border bg-muted/50 px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+          />
         </div>
 
         <div className="rounded-md border border-border bg-muted/30 overflow-hidden">
@@ -69,14 +77,6 @@ export default function SkillPage() {
           <pre className="p-4 sm:p-6 overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
             {content}
           </pre>
-        </div>
-
-        <div className="mt-6 text-xs text-muted-foreground space-y-2">
-          <p>
-            <span className="font-mono">clawhub install agent-soul</span>
-            {" — "}or copy <span className="font-mono">skills/agent-soul/</span> to{" "}
-            <span className="font-mono">~/.openclaw/skills/</span>
-          </p>
         </div>
       </div>
     </div>

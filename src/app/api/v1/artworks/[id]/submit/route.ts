@@ -51,7 +51,55 @@ export async function POST(
     .where(eq(artworks.id, id));
   artwork.status = "pending";
 
-  // Increment total artworks
+  // Mint as Metaplex Core NFT
+  if (!process.env.MINT_AUTHORITY_SECRET_KEY) {
+    // No mint authority configured — revert to draft
+    await db
+      .update(artworks)
+      .set({ status: "draft", updatedAt: new Date() })
+      .where(eq(artworks.id, id));
+    return NextResponse.json(
+      { error: "Minting is not configured on this server" },
+      { status: 503 }
+    );
+  }
+
+  try {
+    const metadataUri = await uploadMetadata(artwork.id, {
+      name: artwork.title,
+      description: `Created with prompt: ${artwork.prompt}`,
+      image: artwork.imageUrl,
+      creatorWallet: walletAddress,
+    });
+
+    const { mintAddress } = await mintCoreNFT(
+      walletAddress,
+      artwork.title,
+      metadataUri
+    );
+
+    await db
+      .update(artworks)
+      .set({ status: "minted", mintAddress, metadataUri, updatedAt: new Date() })
+      .where(eq(artworks.id, id));
+
+    artwork.status = "minted";
+    artwork.mintAddress = mintAddress;
+    artwork.metadataUri = metadataUri;
+  } catch (err) {
+    console.error("NFT mint failed:", err);
+    // Revert to draft so the agent can retry
+    await db
+      .update(artworks)
+      .set({ status: "draft", updatedAt: new Date() })
+      .where(eq(artworks.id, id));
+    return NextResponse.json(
+      { error: "NFT minting failed. Your artwork has been reverted to draft — try again later." },
+      { status: 502 }
+    );
+  }
+
+  // Only record stats after successful mint
   await db
     .update(users)
     .set({
@@ -61,47 +109,12 @@ export async function POST(
     })
     .where(eq(users.id, userId));
 
-  // Log activity
   await db.insert(activityLog).values({
     userId,
     actionType: "create_art",
     description: `Created artwork "${artwork.title}"`,
     metadata: { artworkId: artwork.id },
   });
-
-  // Mint as Metaplex Core NFT (best-effort)
-  if (process.env.MINT_AUTHORITY_SECRET_KEY) {
-    try {
-      const metadataUri = await uploadMetadata(artwork.id, {
-        name: artwork.title,
-        description: `Created with prompt: ${artwork.prompt}`,
-        image: artwork.imageUrl,
-        creatorWallet: walletAddress,
-      });
-
-      const { mintAddress } = await mintCoreNFT(
-        walletAddress,
-        artwork.title,
-        metadataUri
-      );
-
-      await db
-        .update(artworks)
-        .set({ status: "minted", mintAddress, metadataUri, updatedAt: new Date() })
-        .where(eq(artworks.id, id));
-
-      artwork.status = "minted";
-      artwork.mintAddress = mintAddress;
-      artwork.metadataUri = metadataUri;
-    } catch (err) {
-      console.error("NFT mint failed:", err);
-      await db
-        .update(artworks)
-        .set({ status: "failed", updatedAt: new Date() })
-        .where(eq(artworks.id, id));
-      artwork.status = "failed";
-    }
-  }
 
   return NextResponse.json(artwork);
 }
