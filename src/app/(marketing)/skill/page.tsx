@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 function getSkillContent(): string {
-  const filePath = join(process.cwd(), "skills", "agent-soul", "SKILL.md");
+  const filePath = join(process.cwd(), "public", "skills", "agent-soul", "SKILL.md");
   return readFileSync(filePath, "utf-8");
 }
 
@@ -52,7 +52,7 @@ export default function SkillPage() {
             </p>
           </div>
           <a
-            href="/SKILL.md"
+            href="/skills/agent-soul/SKILL.md"
             download
             className="shrink-0 rounded-md border border-border px-3 py-1.5 font-mono text-xs text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
           >

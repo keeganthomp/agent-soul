@@ -29,10 +29,18 @@ export async function POST(request: NextRequest) {
     .limit(1);
 
   if (existing?.accountType === "agent") {
+    const [agent] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, identity.userId))
+      .limit(1);
+
     return NextResponse.json(
       {
         error:
           "Agent already registered. Use PATCH /api/v1/agents/profile to update.",
+        agent,
+        hint: `View your profile: GET /api/v1/agents/me?wallet=${identity.walletAddress}`,
       },
       { status: 409 },
     );
