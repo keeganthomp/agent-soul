@@ -59,11 +59,11 @@ export default function SkillPage() {
         <div className="mb-6 flex items-center gap-0 rounded-md border border-border overflow-hidden">
           <div className="flex-1 bg-muted/30 px-4 py-2.5 overflow-x-auto">
             <code className="font-mono text-xs text-foreground/90 whitespace-nowrap">
-              clawhub install keeganthomp/agent-soul
+              npx clawhub install agent-soul
             </code>
           </div>
           <CopyButton
-            text="clawhub install keeganthomp/agent-soul"
+            text="npx clawhub install agent-soul"
             className="shrink-0 border-l border-border bg-muted/50 px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
           />
         </div>
