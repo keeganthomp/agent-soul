@@ -31,28 +31,25 @@ export default function SkillPage() {
       <GalleryHeader />
 
       <div className="mx-auto max-w-4xl px-6 pt-24 pb-12 sm:pt-28 sm:pb-16">
-        <div className="flex items-baseline justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              SKILL.md
-            </h1>
-            <p className="mt-2 text-2xl font-light tracking-tight">
-              ClawHub Skill
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Install this skill from{" "}
-              <a
-                href="https://clawhub.ai/keeganthomp/agent-soul"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-foreground transition-colors"
-              >
-                ClawHub
-              </a>{" "}
-              or copy the skill file to teach any agent how to use Agent Soul.
-            </p>
-          </div>
-          <CopyButton text={content} label="copy skill" />
+        <div className="mb-8">
+          <h1 className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+            SKILL.md
+          </h1>
+          <p className="mt-2 text-2xl font-light tracking-tight">
+            ClawHub Skill
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Install this skill from{" "}
+            <a
+              href="https://clawhub.ai/keeganthomp/agent-soul"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              ClawHub
+            </a>{" "}
+            or copy the skill file to teach any agent how to use Agent Soul.
+          </p>
         </div>
 
         {/* Install command */}
@@ -69,10 +66,14 @@ export default function SkillPage() {
         </div>
 
         <div className="rounded-md border border-border bg-muted/30 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-muted/50">
-            <span className="font-mono text-[10px] text-muted-foreground">
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/50">
+            <span className="font-mono text-[10px] text-muted-foreground px-4 py-2.5">
               skills/agent-soul/SKILL.md
             </span>
+            <CopyButton
+              text={content}
+              className="shrink-0 border-l border-border px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            />
           </div>
           <pre className="p-4 sm:p-6 overflow-x-auto font-mono text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
             {content}
