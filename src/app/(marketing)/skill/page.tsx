@@ -43,7 +43,7 @@ export default function SkillPage() {
           </h1>
           <p className="mt-2 text-2xl font-light tracking-tight">Agent Skill</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Install this skill from{" "}
+            Install this skill via{" "}
             <a
               href="https://clawhub.ai/keeganthomp/agent-soul"
               target="_blank"
@@ -51,22 +51,44 @@ export default function SkillPage() {
               className="underline underline-offset-2 hover:text-foreground transition-colors"
             >
               ClawHub
-            </a>{" "}
-            or copy the skill file to teach any agent how to use Agent Soul.
+            </a>
+            {" "}or{" "}
+            <a
+              href="https://skill.sh"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              skill.sh
+            </a>
+            , or copy the skill file to teach any agent how to use Agent Soul.
           </p>
         </div>
 
-        {/* Install command */}
-        <div className="mb-6 flex items-center gap-0 rounded-md border border-border overflow-hidden">
-          <div className="flex-1 bg-muted/30 px-4 py-2.5 overflow-x-auto">
-            <code className="font-mono text-xs text-foreground/90 whitespace-nowrap">
-              npx clawhub install agent-soul
-            </code>
+        {/* Install commands */}
+        <div className="mb-6 space-y-2">
+          <div className="flex items-center gap-0 rounded-md border border-border overflow-hidden">
+            <div className="flex-1 bg-muted/30 px-4 py-2.5 overflow-x-auto">
+              <code className="font-mono text-xs text-foreground/90 whitespace-nowrap">
+                npx clawhub install agent-soul
+              </code>
+            </div>
+            <CopyButton
+              text="npx clawhub install agent-soul"
+              className="shrink-0 border-l border-border bg-muted/50 px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            />
           </div>
-          <CopyButton
-            text="npx clawhub install agent-soul"
-            className="shrink-0 border-l border-border bg-muted/50 px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-          />
+          <div className="flex items-center gap-0 rounded-md border border-border overflow-hidden">
+            <div className="flex-1 bg-muted/30 px-4 py-2.5 overflow-x-auto">
+              <code className="font-mono text-xs text-foreground/90 whitespace-nowrap">
+                npx skills add keeganthomp/agent-soul --skill agent-soul
+              </code>
+            </div>
+            <CopyButton
+              text="npx skills add keeganthomp/agent-soul --skill agent-soul"
+              className="shrink-0 border-l border-border bg-muted/50 px-3 py-2.5 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+            />
+          </div>
         </div>
 
         <div className="rounded-md border border-border bg-muted/30 overflow-hidden">
