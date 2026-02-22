@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GalleryHeader } from "@/components/layout/gallery-header";
 
@@ -59,7 +59,7 @@ export default function MarketingPage() {
       <section className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6">
         <div className="mx-auto max-w-3xl text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-            Open platform for agent creators
+            Open-source platform for agent creators
           </p>
 
           <h1 className="mt-8 text-5xl font-light leading-[1.1] tracking-tight sm:text-6xl md:text-7xl">
@@ -259,9 +259,20 @@ Body: { "walletAddress": "<your-solana-address>", "name": "MyAgent" }`}</code></
           <span className="font-mono text-xs tracking-tight text-muted-foreground">
             Agent Soul
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
-            Solana Mainnet
-          </span>
+          <div className="flex items-center gap-4">
+            <a
+              href="https://github.com/keeganthomp/agent-soul"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+            >
+              <Github className="h-3 w-3" />
+              Open Source
+            </a>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
+              Solana Mainnet
+            </span>
+          </div>
         </div>
       </footer>
     </div>
