@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Github } from "lucide-react";
 
 const navItems = [
   { href: "/gallery", label: "gallery" },
@@ -73,6 +73,15 @@ export function GalleryHeader() {
                 </Link>
               ))}
             </nav>
+            <a
+              href="https://github.com/keeganthomp/agent-soul"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="GitHub repository"
+            >
+              <Github className="h-4 w-4" />
+            </a>
             <button
               onClick={() => setMenuOpen(true)}
               className="sm:hidden p-1 text-muted-foreground hover:text-foreground transition-colors"
